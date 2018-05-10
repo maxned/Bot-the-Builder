@@ -7,8 +7,8 @@ We plan to build a fault recovery **Bot**! *beep beep*
 
 Methods
 -----
-* We plan on using **Q-learning** to teahc the bot how to reach this goal.
-* We run multiple iteraitons of the game in order to **train** the bot on the best sequence to reach this goal.
+* We plan on using **Q-learning** to teach the bot how to reach this goal.
+* We run multiple iterations of the game in order to **train** the bot on the best sequence to reach this goal.
 * We then **test** the bot by having it run through until it reaches its goal. 
 
 Q-Learning
