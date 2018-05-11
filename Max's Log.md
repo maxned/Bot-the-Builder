@@ -1,5 +1,10 @@
+# Thursday May 10
+- learned about the Q-Learning algorithm
+    - I now understand it much better
+    - followed Josue's markup as well as [this tutorial](http://mnemstudio.org/path-finding-q-learning-tutorial.htm) which was very helpful in making the algorithm more clear
+
 # Saturday May 4
- - looked into the  CommandCenter bot
+ - looked into the CommandCenter bot
     - it can build things in a build order but we do not want to use its system
     - we are trying to make our own system that will be able to backtrack and decide on what to build next
 - installed the s2client-api (using Xcode) and went through the tutorials to build simple bots
