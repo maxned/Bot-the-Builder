@@ -1,3 +1,15 @@
+# Sunday May 13
+- continued exploring the Q-learning algorithm
+    - understand dimensionality reduction with a [good example](https://dev.to/n1try/cartpole-with-q-learning---first-experiences-with-openai-gym)
+    - played around with [Open AI Gym](http://gym.openai.com) Cartpole example as outlined above
+    - added the cartpole solving file I was learning from into the folder "Max's Test Files"
+- also found a different library for sc2 that works with python, [might be useful](https://github.com/Dentosal/python-sc2)
+
+- current plan is to implement the Q-Learning algorithm for creating units such as marines as fast as possible
+    - plan for dimensionality reduction is to have a limited number of actions such as (build_barracks(), build_marine(), build_scv, build_scv(), wait_mineral_production()) and for the current state to be the number of units of each type that are currently built.
+    - the learning space will be decently large but the algorithm that the AI comes up with will be interesting
+    - for further dimensionality reduction, we can reduce the step rate
+
 # Thursday May 10
 - learned about the Q-Learning algorithm
     - I now understand it much better
