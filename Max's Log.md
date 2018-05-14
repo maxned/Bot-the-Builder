@@ -1,3 +1,8 @@
+# Monday May 14
+- instead of trying to make a Q-Learning algorithm to create marines first in the whole game, it will be much easier to do so in a mini game by deepmind as detailed [here](https://github.com/deepmind/pysc2/blob/master/docs/mini_games.md#buildmarines)
+    - this will make it much easier to test the algorithm and make sure everything is working before trying it on the actual game
+    - using the knowledge from this mini game, it will be possible to extend it to the whole game to help one play the actual game
+
 # Sunday May 13
 - continued exploring the Q-learning algorithm
     - understand dimensionality reduction with a [good example](https://dev.to/n1try/cartpole-with-q-learning---first-experiences-with-openai-gym)
