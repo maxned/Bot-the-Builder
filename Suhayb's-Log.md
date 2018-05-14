@@ -15,3 +15,7 @@
 - Mapped out different approaches to split the game into multiple states.
 Researched game dependency trees and concluded that it’s better to use the API and q learning to test for failed build commands.   
 - Looked into using actions as states to reduce the state space. By using builds as a state we can minimize the state space to only actionable states.
+
+# Monday, May 14th
+- Researched how to extract data from parsers like [s2protocol](https://github.com/Blizzard/s2protocol) and [sc2Reader](https://github.com/GraylinKim/sc2reader).
+- Looking at TensorFlow as a replacement to Waka.
