@@ -30,3 +30,5 @@ Resources
 * PYSC2: [Building a smart agent](https://chatbotslife.com/building-a-smart-pysc2-agent-cdc269cb095d), [building a bot](https://github.com/skjb/pysc2-tutorial)
 
 * Weka: [Youtube Tutorial](https://www.youtube.com/watch?v=m7kpIBGEdkI)
+
+* Markdown: [Md Cheatsheet](https://github.com/adam-p/markdown-here/wiki/Markdown-Cheatsheet)
