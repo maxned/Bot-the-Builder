@@ -17,5 +17,9 @@ Researched game dependency trees and concluded that it’s better to use the API
 - Looked into using actions as states to reduce the state space. By using builds as a state we can minimize the state space to only actionable states.
 
 # Monday, May 14th
-- Researched how to extract data from parsers like [s2protocol](https://github.com/Blizzard/s2protocol) and [sc2Reader](https://github.com/GraylinKim/sc2reader).
+- Researched how to extract data from replays using [s2protocol](https://github.com/Blizzard/s2protocol) and [sc2Reader](https://github.com/GraylinKim/sc2reader).
 - Looking at TensorFlow as a replacement to Waka.
+
+# Saturday & Sunday, May 19-20th
+- Built a python program that parses the game's replay files using [sc2Reader](https://github.com/GraylinKim/sc2reader).
+- Python program to extract statistics data from multiple replay files.
