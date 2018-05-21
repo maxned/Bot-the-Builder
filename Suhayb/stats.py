@@ -2,11 +2,12 @@
 # cd to file dir
 # python3 -m venv $(pwd)
 # source $(pwd)/bin/activate
+
 # pip install tqdm
 # pip install sc2reader
 
 # To run:
-# python3 file1.SC2Replay file2.SC2Replay ...
+# python3 stats.py file1.SC2Replay file2.SC2Replay ...
 
 # Input: paths to star craft 2 replay files
 # Output file Structure:
