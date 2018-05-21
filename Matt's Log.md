@@ -15,3 +15,13 @@
 # Monday May 14
 	- Downloaded Weka and added a basic tutorial
 	- Currently working on integrating Starcraft 2 logic into Weka 
+
+# Tuesday May 15
+	- Met with Dr. McCoy again and discussed inputs and outputs to Weka 
+	- Talked about alternate strategies to accomplish what we needed to do, decided that Weka might not actually be needed
+	- Changed project direction -> parse Starcraft 2 replays using python command line tool and generate an AI that creates it's own build orders by ranking successful and unsuccessful actions in professional games, with data we gather from using this tool.
+
+# Sunday May 20
+	- Attempted to install s2protocol: https://github.com/Blizzard/s2protocol to parse through replays
+	- Had missing package dependencies that couldn't be installed from pip
+	- Planning to check in with Dr. McCoy for potential alternatives 
