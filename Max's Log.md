@@ -1,3 +1,8 @@
+# Monday May 21
+- created an Amazon EC2 Linux instance to try to get Starcraft II running in headless mode
+    - installed pysc2 and the required dependencies but was not able to launch a bot due to the webscoket connection timing out
+    - found a resource that used Google Collab for this purpose [here](https://medium.com/@n0mad/how-i-trained-starcraft-2-ais-using-googles-free-gpus-44bc635b0418)
+
 # Monday May 14
 - instead of trying to make a Q-Learning algorithm to create marines first in the whole game, it will be much easier to do so in a mini game by deepmind as detailed [here](https://github.com/deepmind/pysc2/blob/master/docs/mini_games.md#buildmarines)
     - this will make it much easier to test the algorithm and make sure everything is working before trying it on the actual game
