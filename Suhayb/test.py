@@ -2,7 +2,7 @@ from pprint import pprint
 import sc2reader, csv, sys, os
 
 replay = sc2reader.load_replay(
-    sys.argv[1], load_level=3)
+    sys.argv[1], load_level=4)
 
 if len(replay.players) != 2:
     raise  Exception('Players not equal to two!')
@@ -59,7 +59,7 @@ for event in replay.tracker_events:
         print("Built:", event.unit.name, event.unit.owner.pid, event.unit._type_class.id, event.second)
 
 
-# print(vars(event))
+# print(vars(replay.game_events))
 
 # print(sc2reader)
 # pprint(vars(replay))

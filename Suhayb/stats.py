@@ -50,6 +50,8 @@ for num, parseFile in enumerate(files, start=1):
 
     #create output files
     fileName = os.path.splitext(os.path.basename(parseFile))[0]
+
+    # TODO: Check if file already exsists if so skip
     winnerStatsFile = open(
         'output/wins/stats/' + fileName + '.csv', 'w', newline='')
     winnerstatsCSV = csv.writer(winnerStatsFile)
