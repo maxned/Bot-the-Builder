@@ -1,3 +1,7 @@
+# Thursday May 24
+- created another AWS Ubuntu instance and was able to get starcraft running in headless mode
+    - this is really good because now I can train my Q-Learner
+
 # Monday May 21
 - created an Amazon EC2 Linux instance to try to get Starcraft II running in headless mode
     - installed pysc2 and the required dependencies but was not able to launch a bot due to the webscoket connection timing out
