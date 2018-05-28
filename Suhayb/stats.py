@@ -24,8 +24,7 @@ import sc2reader, csv, sys, os
 from tqdm import trange
 
 #inital setup
-os.makedirs('output/wins/stats', exist_ok=True)
-os.makedirs('output/losses/stats', exist_ok=True)
+os.makedirs('output/stats', exist_ok=True)
 
 files = sys.argv[1:]
 
@@ -52,16 +51,12 @@ for num, parseFile in enumerate(files, start=1):
     fileName = os.path.splitext(os.path.basename(parseFile))[0]
 
     # TODO: Check if file already exsists if so skip
-    winnerStatsFile = open(
-        'output/wins/stats/' + fileName + '.csv', 'w', newline='')
-    winnerstatsCSV = csv.writer(winnerStatsFile)
-
-    looserStatsfile = open(
-        'output/losses/stats/' + fileName + '.csv', 'w', newline='')
-    looserStatsCSV = csv.writer(looserStatsfile)
+    statsFile = open(
+        'output/stats/' + fileName + '.csv', 'w', newline='')
+    statsCSV = csv.writer(statsFile)
 
     statsHead = [
-        'seconds', 'minerals_current', 'vespene_current',
+        'winner', 'seconds', 'minerals_current', 'vespene_current',
         'minerals_collection_rate', 'vespene_collection_rate',
         'workers_active_count', 'minerals_used_in_progress_army',
         'minerals_used_in_progress_economy',
@@ -83,21 +78,14 @@ for num, parseFile in enumerate(files, start=1):
         'ff_vespene_lost_technology'
     ]
 
-    winnerstatsCSV.writerow(statsHead)
-    looserStatsCSV.writerow(statsHead)
-
+    statsCSV.writerow(statsHead)
     # Parse
     for event in replay.tracker_events:
         if event.name == 'PlayerStatsEvent':
-            if event.pid == winner:
-                winnerstatsCSV.writerow([event.second] +
-                                        list(event.stats.values()))
-            else:
-                looserStatsCSV.writerow([event.second] +
+            statsCSV.writerow([1 if event.pid == winner else 0, event.second] +
                                         list(event.stats.values()))
 
-    winnerStatsFile.close()
-    looserStatsfile.close()
+    statsFile.close()
 
     #update progress bar
     pbar.update(num)
