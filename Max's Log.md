@@ -1,3 +1,7 @@
+# Monday May 28
+- started work on my marine builder using Q-Learning
+    - defined the state and action space
+
 # Thursday May 24
 - created another AWS Ubuntu instance and was able to get starcraft running in headless mode
     - this is really good because now I can train my Q-Learner
