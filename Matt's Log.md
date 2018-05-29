@@ -25,3 +25,12 @@
 	- Attempted to install s2protocol: https://github.com/Blizzard/s2protocol to parse through replays
 	- Had missing package dependencies that couldn't be installed from pip
 	- Planning to check in with Dr. McCoy for potential alternatives 
+
+# Monday May 28
+	- Created starting Tkinter shell for graphing live replay and KNN data for our Bot.
+	- Currently, TKinter GUI has a basic interface with the Matplotlib outline interface added, but the charts themselves
+	will be the next step.
+	- Planning on meeting with Josue to determine how we can interface KNN algorithm data with this Tkinter/Matplotlib 
+	interface in real time.
+	- The file "GUI.py" can be found on master branch
+	- Reviewed KNN code and Tkinter/Matplotlib GUI code with Josue and discussed how we would interface both of our components.
