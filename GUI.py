@@ -1,10 +1,6 @@
 ''' TODO LIST 
 	Split classes into separate modules
-	Remove Search specific labels
-	Remove SQL Database functionality
 	Talk about how inputs will be read
-	Change file-reading titles
-	Fix comments so they apply to AI
 '''
 
 import tkinter as tk
