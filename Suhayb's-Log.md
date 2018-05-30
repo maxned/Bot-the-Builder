@@ -23,3 +23,12 @@ Researched game dependency trees and concluded that it’s better to use the API
 # Saturday & Sunday, May 19-20th
 - Built a python program that parses the game's replay files using [sc2Reader](https://github.com/GraylinKim/sc2reader).
 - Python program to extract statistics data from multiple replay files.
+- Currently extracting stats like mineral count...
+
+# Monday May 21st
+- Group meeting
+
+# Sunday & Monday May 27-28th
+- Updated stats parser
+- Replay units count parser
+- Looked into TenserFlow linear regression as a possible method to predict win probability.

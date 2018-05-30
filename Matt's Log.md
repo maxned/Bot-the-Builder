@@ -32,4 +32,5 @@
 	will be the next step.
 	- Planning on meeting with Josue to determine how we can interface KNN algorithm data with this Tkinter/Matplotlib 
 	interface in real time.
-	- The file "GUI.py" can be found on Matt's branch, under folder "Matt"
+	- The file "GUI.py" can be found on master branch
+	- Reviewed KNN code and Tkinter/Matplotlib GUI code with Josue and discussed how we would interface both of our components.
