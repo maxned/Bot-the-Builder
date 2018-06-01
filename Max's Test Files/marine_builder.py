@@ -25,6 +25,7 @@ _TRAIN_MARINE = actions.FUNCTIONS.Train_Marine_quick.id
 # Features
 _PLAYER_RELATIVE = features.SCREEN_FEATURES.player_relative.index
 _UNIT_TYPE = features.SCREEN_FEATURES.unit_type.index
+_HIT_POINTS = features.SCREEN_FEATURES.unit_hit_points_ratio.index
 _PLAYER_ID = features.SCREEN_FEATURES.player_id.index
 
 # Unit IDs
@@ -118,24 +119,21 @@ class MarineBuilder(base_agent.BaseAgent):
             return [x - x_distance, y - y_distance]
         return [x + x_distance, y + y_distance]
 
-    def step(self, obs):
-        super(MarineBuilder, self).step(obs)
-
-        if obs.first():
-            # check if our base is in the top left corner of the map or bottom right
-            player_y, player_x = (obs.observation['minimap'][_PLAYER_RELATIVE] == _PLAYER_SELF).nonzero()
-            self.base_top_left = 1 if player_y.any() and player_y.mean() <= 31 else 0
+    def get_current_state(self, obs):
+        marine_count = obs.observation['player'][8] 
 
         unit_type = obs.observation['screen'][_UNIT_TYPE]
-
-        marine_y, marine_x = (unit_type == _TERRAN_MARINE).nonzero()
-        marine_count = int(round(len(marine_y) / 9)) # need to get marine size here
+        unit_hp = obs.observation['screen'][_HIT_POINTS]
 
         depot_y, depot_x = (unit_type == _TERRAN_SUPPLY_DEPOT).nonzero()
-        supply_depot_count = int(round(len(depot_y) / 69))
+        #supply_depot_count = int(round(len(depot_y) / 69))
+        supply_depot_hp = unit_hp[depot_y, depot_x] # 2d array with hp from 0 - 255 indicating the hp of that pixel for the supply depot, length of depot_hp is 69
+        supply_depot_count = int(np.count_nonzero(supply_depot_hp == 255) / 69) # counts number of supply depots with full health
 
         barracks_y, barracks_x = (unit_type == _TERRAN_BARRACKS).nonzero()
-        barracks_count = int(round(len(barracks_y) / 137))
+        #barracks_count = int(round(len(barracks_y) / 137))
+        barracks_hp = unit_hp[barracks_y, barracks_x] # 2d array with hp from 0 - 255 indicating the hp of that pixel for the barrack, length of barracks_hp is 137
+        barracks_count = int(np.count_nonzero(barracks_hp == 255) / 137) # counts number of barracks with full health
 
         # check what unit is currently selected
         if len(obs.observation['single_select']) > 0 and obs.observation['single_select'][0][0] == _TERRAN_SCV:
@@ -148,7 +146,7 @@ class MarineBuilder(base_agent.BaseAgent):
             scv_selected = 0
             barracks_selected = 0
 
-        state_space = [
+        current_state = [
             marine_count,
             supply_depot_count,
             barracks_count,
@@ -156,10 +154,21 @@ class MarineBuilder(base_agent.BaseAgent):
             barracks_selected,
         ]
 
-        print(state_space)
+        return current_state
+
+    def step(self, obs):
+        super(MarineBuilder, self).step(obs)
+
+        if obs.first():
+            # check if our base is in the top left corner of the map or bottom right
+            player_y, player_x = (obs.observation['minimap'][_PLAYER_RELATIVE] == _PLAYER_SELF).nonzero()
+            self.base_top_left = 1 if player_y.any() and player_y.mean() <= 31 else 0
+
+        #print(self.get_current_state(obs))
 
         return actions.FunctionCall(_NO_OP, [])
 
+        '''
         if self.previous_action is not None:
             reward = 0
             # check here previous marine count
@@ -171,6 +180,9 @@ class MarineBuilder(base_agent.BaseAgent):
 
         self.previous_state = current_state
         self.previous_action = rl_action
+        '''
+
+        smart_action = ACTION_SELECT_SCV
 
         if smart_action == ACTION_DO_NOTHING:
             return actions.FunctionCall(_NO_OP, [])
@@ -180,7 +192,7 @@ class MarineBuilder(base_agent.BaseAgent):
             unit_y, unit_x = (unit_type == _TERRAN_SCV).nonzero()
 
             if unit_y.any():
-                # choose random SCV
+                # choose random SCV (can improve to prefer an idle SCV)
                 i = random.randint(0, len(unit_y) - 1)
                 target = [unit_x[i], unit_y[i]]
                 return actions.FunctionCall(_SELECT_POINT, [_NOT_QUEUED, target])
