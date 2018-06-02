@@ -1,7 +1,8 @@
 
 import random
-import math
+from math import *
 import time
+import pdb
 
 import numpy as np
 import pandas as pd
@@ -26,7 +27,7 @@ _TRAIN_MARINE = actions.FUNCTIONS.Train_Marine_quick.id
 _PLAYER_RELATIVE = features.SCREEN_FEATURES.player_relative.index
 _UNIT_TYPE = features.SCREEN_FEATURES.unit_type.index
 _HIT_POINTS = features.SCREEN_FEATURES.unit_hit_points_ratio.index
-_PLAYER_ID = features.SCREEN_FEATURES.player_id.index
+_SCREEN_HEIGHT_MAP = features.SCREEN_FEATURES.height_map.index
 
 # Unit IDs
 _TERRAN_COMMANDCENTER = 18
@@ -39,6 +40,10 @@ _TERRAN_MARINE = 48
 _PLAYER_SELF = 1
 _NOT_QUEUED = [0]
 _QUEUED = [1]
+
+# Building Sizes in pixels
+SUPPLY_DEPOT_SIZE = 69
+BARRACKS_SIZE = 137
 
 ACTION_DO_NOTHING = 'donothing'
 ACTION_SELECT_SCV = 'selectscv'
@@ -109,15 +114,70 @@ class MarineBuilder(base_agent.BaseAgent):
 
         self.previous_action = None
         self.previous_state = None
-        self.marine_count = 0
-        self.barracks_count = 0
-        self.supply_depot_count = 0
+
+        self.step_count = 0
 
     # work with locations relative to our base
     def transformLocation(self, x, x_distance, y, y_distance):
         if not self.base_top_left:
             return [x - x_distance, y - y_distance]
         return [x + x_distance, y + y_distance]
+
+    # code taken from https://softwareengineering.stackexchange.com/questions/206298/finding-possible-positions-for-rectangle-in-a-2-d-array
+    # returns a list of tuples of the coordinates that are valid by looking for zeroes in the grid
+    def find_valid_locations(self, grid, height, width):
+        seen = set()
+        check = [(0, 0, 0, 0)]
+        w = width
+        h = height
+        items = list()
+        while check:
+            x, y, ox, oy = check.pop()
+            if (x, y) in seen:
+                continue
+            seen.add((x, y))
+            if x + w >= len(grid) or y + h >= len(grid[0]):
+                continue
+            for i, row in enumerate(grid[x+ox:x+w+1], x+ox):
+                for j, val in enumerate(row[y+oy:y+h+1], y+oy):
+                    if val:
+                        break
+                else:
+                    continue
+                check.extend([(i+1, y, 0, 0), (x, j+1, 0, 0)])
+                break
+            else:
+                items.append((x,y))
+                #yield (x, y)
+                check.extend([(x+1, y, w-1, 0), (x, y+1, 0, h-1)])
+                continue
+        
+        return items
+
+    def multidim_intersect(self, arr1, arr2):
+        arr1_view = arr1.view([('',arr1.dtype)]*arr1.shape[1])
+        arr2_view = arr2.view([('',arr2.dtype)]*arr2.shape[1])
+        intersected = np.intersect1d(arr1_view, arr2_view)
+        return intersected.view(arr1.dtype).reshape(-1, arr1.shape[1])
+
+    def get_placement_location(self, obs, size):
+        unit_type = obs.observation['screen'][_UNIT_TYPE] # returns 0 for a pixel if no unit there
+
+        screen_height = obs.observation['screen'][_SCREEN_HEIGHT_MAP]
+        screen_height[screen_height == 0] = -1 # change all zeroes to -1 because 0 is invalid location
+        screen_height[screen_height > 0] = 0 # change all valid locations to 0 for find_valid_location algorithm
+
+        non_overlapping_unit_locations = self.find_valid_locations(np.transpose(unit_type), ceil(sqrt(size)), ceil(sqrt(size)))
+        valid_screen_height_locations = self.find_valid_locations(np.transpose(screen_height), ceil(sqrt(size)), ceil(sqrt(size)))
+        possible_locations = list(set(non_overlapping_unit_locations) & set(valid_screen_height_locations)) # find intersection of both lists for valid locations
+        
+        if not possible_locations:
+            return None
+
+        target = random.choice(possible_locations)
+        x = target[0] + round(sqrt(size)/2) # change from left corner to center of unit
+        y = target[1] + round(sqrt(size)/2)
+        return (x, y)
 
     def get_current_state(self, obs):
         marine_count = obs.observation['player'][8] 
@@ -128,12 +188,12 @@ class MarineBuilder(base_agent.BaseAgent):
         depot_y, depot_x = (unit_type == _TERRAN_SUPPLY_DEPOT).nonzero()
         #supply_depot_count = int(round(len(depot_y) / 69))
         supply_depot_hp = unit_hp[depot_y, depot_x] # 2d array with hp from 0 - 255 indicating the hp of that pixel for the supply depot, length of depot_hp is 69
-        supply_depot_count = int(np.count_nonzero(supply_depot_hp == 255) / 69) # counts number of supply depots with full health
+        supply_depot_count = int(np.count_nonzero(supply_depot_hp == 255) / SUPPLY_DEPOT_SIZE) # counts number of supply depots with full health
 
         barracks_y, barracks_x = (unit_type == _TERRAN_BARRACKS).nonzero()
         #barracks_count = int(round(len(barracks_y) / 137))
         barracks_hp = unit_hp[barracks_y, barracks_x] # 2d array with hp from 0 - 255 indicating the hp of that pixel for the barrack, length of barracks_hp is 137
-        barracks_count = int(np.count_nonzero(barracks_hp == 255) / 137) # counts number of barracks with full health
+        barracks_count = int(np.count_nonzero(barracks_hp == 255) / BARRACKS_SIZE) # counts number of barracks with full health
 
         # check what unit is currently selected
         if len(obs.observation['single_select']) > 0 and obs.observation['single_select'][0][0] == _TERRAN_SCV:
@@ -166,8 +226,6 @@ class MarineBuilder(base_agent.BaseAgent):
 
         #print(self.get_current_state(obs))
 
-        return actions.FunctionCall(_NO_OP, [])
-
         '''
         if self.previous_action is not None:
             reward = 0
@@ -182,12 +240,13 @@ class MarineBuilder(base_agent.BaseAgent):
         self.previous_action = rl_action
         '''
 
-        smart_action = ACTION_SELECT_SCV
+        smart_action = ""
+        self.step_count += 1
 
         if smart_action == ACTION_DO_NOTHING:
             return actions.FunctionCall(_NO_OP, [])
 
-        elif smart_action == ACTION_SELECT_SCV:
+        elif smart_action == ACTION_SELECT_SCV or self.step_count == 200:
             unit_type = obs.observation['screen'][_UNIT_TYPE]
             unit_y, unit_x = (unit_type == _TERRAN_SCV).nonzero()
 
@@ -197,14 +256,11 @@ class MarineBuilder(base_agent.BaseAgent):
                 target = [unit_x[i], unit_y[i]]
                 return actions.FunctionCall(_SELECT_POINT, [_NOT_QUEUED, target])
 
-        elif smart_action == ACTION_BUILD_SUPPLY_DEPOT:
+        elif smart_action == ACTION_BUILD_SUPPLY_DEPOT or self.step_count == 500 or self.step_count == 1000 or self.step_count == 1500 or self.step_count == 2000 or self.step_count == 2500:
             if _BUILD_SUPPLY_DEPOT in obs.observation['available_actions']:
-                unit_type = obs.observation['screen'][_UNIT_TYPE]
-                unit_y, unit_x = (unit_type == _TERRAN_COMMANDCENTER).nonzero()
-
-                if unit_y.any():
-                    # build supply depot 20 points away in the y direction from command center
-                    target = self.transformLocation(int(unit_x.mean()), 0, int(unit_y.mean()), 20)
+                target = self.get_placement_location(obs, SUPPLY_DEPOT_SIZE)
+                if target:
+                    print(target)
                     return actions.FunctionCall(_BUILD_SUPPLY_DEPOT, [_NOT_QUEUED, target])
 
         elif smart_action == ACTION_SELECT_BARRACKS:
@@ -217,15 +273,11 @@ class MarineBuilder(base_agent.BaseAgent):
                 target = [unit_x[i], unit_y[i]]
                 return actions.FunctionCall(_SELECT_POINT, [_NOT_QUEUED, target])
 
-        elif smart_action == ACTION_BUILD_BARRACKS:
+        elif smart_action == ACTION_BUILD_BARRACKS or self.step_count == 3000 or self.step_count == 4000 or self.step_count == 5000 or self.step_count == 6000 or self.step_count == 7000:
             if _BUILD_BARRACKS in obs.observation['available_actions']:
-                unit_type = obs.observation['screen'][_UNIT_TYPE]
-                unit_y, unit_x = (unit_type == _TERRAN_COMMANDCENTER).nonzero()
-
-                if unit_y.any():
-                    # warning need to be a random distance away on a free spot
-                    # build barracks 20 points away in the x direction from command center
-                    target = self.transformLocation(int(unit_x.mean()), 20, int(unit_y.mean()), 0)
+                target = self.get_placement_location(obs, BARRACKS_SIZE)
+                if target:
+                    print(target)
                     return actions.FunctionCall(_BUILD_BARRACKS, [_NOT_QUEUED, target])
 
         elif smart_action == ACTION_BUILD_MARINE:
