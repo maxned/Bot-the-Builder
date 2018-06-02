@@ -39,11 +39,10 @@ for num, parseFile in enumerate(files, start=1):
     replay = sc2reader.load_replay(parseFile, load_map=1)
 
     #one vs one. Terran vs Terran
-    if len(replay.players) != 2 or replay.type != '1v1' or replay.players[0].play_race != "Terran" or replay.players[1].play_race != "Terran" or not replay.competitive:
-        raise Exception('Players not equal to two or player race not Terran!')
+    if len(replay.players) != 2 or replay.type != '1v1' or (replay.players[0].play_race != "Terran" and replay.players[1].play_race != "Terran") or not replay.competitive:
+        return
 
     #Collect Stats of Game
-    map_hash = replay.map_hash
     winner = replay.winner.players[0].pid
     loser = 1 + (winner) % 2
 
