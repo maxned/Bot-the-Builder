@@ -33,8 +33,11 @@ Researched game dependency trees and concluded that it’s better to use the API
 - Replay units count parser
 - Looked into TenserFlow linear regression as a possible method to predict win probability.
 
-# Fri and Sat June 1st-2nd
+# Fri June 1st
+- Sourced replays
 - Downloaded and parsed 1311 replays for unit data.
+
+# Sat June 2nd
 - Ran a linear regression over the data using TensorFlow.
-- Concluded that linear regression has a low accuracy rate of 61%.
+- Concluded that linear regression has a low accuracy rate of 61% which is close to random of 50% accuracy.
 
