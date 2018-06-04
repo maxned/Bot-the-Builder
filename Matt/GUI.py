@@ -94,10 +94,16 @@ class GraphPage(tk.Frame): # Graphing class for plotting
 		self.pickMessage = tk.Message(display_frame, text="no data selected", width=500, font=("Verdana", 12))
 		self.pickMessage.pack(side='right')
 
-		# pause the animation
+		# create the plot manager
+		self.plot_container = PlotManager(self)
+
+		# start the animation
+		self.anim = animation.FuncAnimation(graphFig, self.plot_container.animate, interval=refreshRate)
+
+		# button to pause the animation
 		self.pause_button = tk.Button(button_frame, state='active', text="Pause Animation",
 								command=self.pause_animation)
-		# resume the animation
+		# button to resume the animation
 		self.resume_button = tk.Button(button_frame, state='disabled', text="Resume Animation",
 								command=self.resume_animation)
 
@@ -176,7 +182,7 @@ class PlotManager(object):	# contains logic for subplots
 
 	''' TODO '''
 	def update_dynamic_plots(self): 	# update dynamic (animated) plots
-		# xData, yData = retrieve dynamic plot 1 data
+		xData, yData = self.get_plot_data(data_file1)
 		if(xData and yData):
 			self.update_plot(self.plot_dynamic1, xData, yData,
 				xlabel='x-data',
@@ -185,6 +191,7 @@ class PlotManager(object):	# contains logic for subplots
 				settings='bo')	# bo = blue, circles (scatter-points)
 
 		# xData, yData = retrieve dynamic plot 2 data
+		xData, yData = self.get_plot_data(data_file1)
 		if(xData and yData):
 			self.update_plot(self.plot_dynamic2, xData, yData,
 								xlabel='x-data',
@@ -211,7 +218,7 @@ class PlotManager(object):	# contains logic for subplots
 		self.update_plot(selected_plot, xData, yData,
 						 xlabel='X-Data ',
 						 ylabel='Y-Data',
-						 title='Title Here'
+						 title='Title Here',
 						 settings='go')
 
 		diag_line = selected_plot.plot(	selected_plot.get_xlim(), 	# add a 45 degree line to the plot
@@ -222,8 +229,9 @@ class PlotManager(object):	# contains logic for subplots
 	''' TODO - ADD more counters for files '''
 	def check_for_files(self):	# check that all input files exist
 		fileCounter = 0
-		fileCounter += self.check_fileExists(file1)
-		fileCounter += self.check_fileExists(file2)
+		fileCounter += self.check_fileExists(data_file1)
+		fileCounter += self.check_fileExists(timing_file)
+		fileCounter += self.check_fileExists(name_file)
 
 		if(fileCounter == num_files):
 			return 1
