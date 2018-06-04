@@ -117,12 +117,6 @@ class MarineBuilder(base_agent.BaseAgent):
 
         self.step_count = 0
 
-    # work with locations relative to our base
-    def transformLocation(self, x, x_distance, y, y_distance):
-        if not self.base_top_left:
-            return [x - x_distance, y - y_distance]
-        return [x + x_distance, y + y_distance]
-
     # code taken from https://softwareengineering.stackexchange.com/questions/206298/finding-possible-positions-for-rectangle-in-a-2-d-array
     # returns a list of tuples of the coordinates that are valid by looking for zeroes in the grid
     def find_valid_locations(self, grid, height, width):
@@ -170,7 +164,7 @@ class MarineBuilder(base_agent.BaseAgent):
         non_overlapping_unit_locations = self.find_valid_locations(np.transpose(unit_type), ceil(sqrt(size)), ceil(sqrt(size)))
         valid_screen_height_locations = self.find_valid_locations(np.transpose(screen_height), ceil(sqrt(size)), ceil(sqrt(size)))
         possible_locations = list(set(non_overlapping_unit_locations) & set(valid_screen_height_locations)) # find intersection of both lists for valid locations
-        
+
         if not possible_locations:
             return None
 
@@ -216,15 +210,19 @@ class MarineBuilder(base_agent.BaseAgent):
 
         return current_state
 
+    def reset(self):
+        print("reset")
+
     def step(self, obs):
         super(MarineBuilder, self).step(obs)
 
-        if obs.first():
-            # check if our base is in the top left corner of the map or bottom right
-            player_y, player_x = (obs.observation['minimap'][_PLAYER_RELATIVE] == _PLAYER_SELF).nonzero()
-            self.base_top_left = 1 if player_y.any() and player_y.mean() <= 31 else 0
-
         #print(self.get_current_state(obs))
+
+        if obs.first():
+            print("first")
+
+        if obs.last():
+            print("last")
 
         '''
         if self.previous_action is not None:
@@ -243,6 +241,10 @@ class MarineBuilder(base_agent.BaseAgent):
         smart_action = ""
         self.step_count += 1
 
+        if self.step_count % 500 == 0:
+            # can get last step based on knowing if we will call reset
+            return True
+
         if smart_action == ACTION_DO_NOTHING:
             return actions.FunctionCall(_NO_OP, [])
 
@@ -260,7 +262,6 @@ class MarineBuilder(base_agent.BaseAgent):
             if _BUILD_SUPPLY_DEPOT in obs.observation['available_actions']:
                 target = self.get_placement_location(obs, SUPPLY_DEPOT_SIZE)
                 if target:
-                    print(target)
                     return actions.FunctionCall(_BUILD_SUPPLY_DEPOT, [_NOT_QUEUED, target])
 
         elif smart_action == ACTION_SELECT_BARRACKS:
@@ -277,7 +278,6 @@ class MarineBuilder(base_agent.BaseAgent):
             if _BUILD_BARRACKS in obs.observation['available_actions']:
                 target = self.get_placement_location(obs, BARRACKS_SIZE)
                 if target:
-                    print(target)
                     return actions.FunctionCall(_BUILD_BARRACKS, [_NOT_QUEUED, target])
 
         elif smart_action == ACTION_BUILD_MARINE:

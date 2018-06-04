@@ -1,3 +1,15 @@
+# Sunday June 3
+- worked on making it possible to reset the game early
+    - this took a lot of trial and error to come to my simple solution
+    - I had to run through the source code of pysc2 and figure out where to change code to handle this
+
+- to run my source code file `marine_builder.py` you need to modify the code in `run_loop.py` of pysc2 in the `env` folder
+    - right before `timesteps = env.step(actions)` add 
+    ```python
+     if True in actions:
+          break
+    ```
+
 # Friday June 1
 - finished the state space for the q learner
     - currently it includes the current number of marines, current supply depots and barracks with 100% health, and whether an scv or barracks is selected
