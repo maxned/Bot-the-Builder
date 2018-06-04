@@ -1,3 +1,7 @@
+# Monday June 4
+- first run of the Q learning agent to build marines
+    - on the first run it figured out how to build marines but that was just luck (now I have to train the agent)
+
 # Sunday June 3
 - worked on making it possible to reset the game early
     - this took a lot of trial and error to come to my simple solution

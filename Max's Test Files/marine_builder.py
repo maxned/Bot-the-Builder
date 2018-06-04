@@ -12,8 +12,9 @@ from pysc2.lib import actions
 from pysc2.lib import features
 
 MARINE_GOAL = 20
-BUILT_MARINE_REWARD = 100
-BUILT_BARRACKS = 1
+BUILT_MARINE_REWARD = 10
+BUILT_SUPPLY_DEPOT_REWARD = 0
+BUILT_BARRACKS_REWARD = 0
 
 # Functions
 _NO_OP = actions.FUNCTIONS.no_op.id
@@ -148,12 +149,7 @@ class MarineBuilder(base_agent.BaseAgent):
         
         return items
 
-    def multidim_intersect(self, arr1, arr2):
-        arr1_view = arr1.view([('',arr1.dtype)]*arr1.shape[1])
-        arr2_view = arr2.view([('',arr2.dtype)]*arr2.shape[1])
-        intersected = np.intersect1d(arr1_view, arr2_view)
-        return intersected.view(arr1.dtype).reshape(-1, arr1.shape[1])
-
+    # returns a tuple of the best location for a unit of any size on the current screen
     def get_placement_location(self, obs, size):
         unit_type = obs.observation['screen'][_UNIT_TYPE] # returns 0 for a pixel if no unit there
 
@@ -210,40 +206,46 @@ class MarineBuilder(base_agent.BaseAgent):
 
         return current_state
 
+    def get_reward(self, current_state, previous_state):
+        marine_reward = (current_state[0] - previous_state[0]) * BUILT_MARINE_REWARD
+        supply_depot_reward = (current_state[1] - previous_state[1]) * BUILT_SUPPLY_DEPOT_REWARD
+        barracks_reward = (current_state[2] - previous_state[2]) * BUILT_BARRACKS_REWARD
+        total_reward = marine_reward + supply_depot_reward + barracks_reward
+
+        # if we move the map then return to the same spot, the previous state and current will be different
+        # resulting in a negative reward being possible
+        if total_reward > 0:
+            return total_reward
+        else:
+            return 0 
+
     def reset(self):
         print("reset")
 
     def step(self, obs):
         super(MarineBuilder, self).step(obs)
 
-        #print(self.get_current_state(obs))
-
         if obs.first():
             print("first")
 
-        if obs.last():
-            print("last")
-
-        '''
-        if self.previous_action is not None:
-            reward = 0
-            # check here previous marine count
-
+        current_state = self.get_current_state(obs)
+        
+        if self.previous_action is not None and self.previous_state is not None:
+            reward = self.get_reward(current_state, self.previous_state)
             self.qlearn.learn(str(self.previous_state), self.previous_action, reward, str(current_state))
+
+        # check the number of marines and end episode if reached goal
+        if current_state[0] == MARINE_GOAL:
+            # can get last step based on knowing if we will call reset
+            return True
 
         rl_action = self.qlearn.choose_action(str(current_state))
         smart_action = smart_actions[rl_action]
 
         self.previous_state = current_state
         self.previous_action = rl_action
-        '''
 
-        smart_action = ""
         self.step_count += 1
-
-        if self.step_count % 500 == 0:
-            # can get last step based on knowing if we will call reset
-            return True
 
         if smart_action == ACTION_DO_NOTHING:
             return actions.FunctionCall(_NO_OP, [])
@@ -258,7 +260,7 @@ class MarineBuilder(base_agent.BaseAgent):
                 target = [unit_x[i], unit_y[i]]
                 return actions.FunctionCall(_SELECT_POINT, [_NOT_QUEUED, target])
 
-        elif smart_action == ACTION_BUILD_SUPPLY_DEPOT or self.step_count == 500 or self.step_count == 1000 or self.step_count == 1500 or self.step_count == 2000 or self.step_count == 2500:
+        elif smart_action == ACTION_BUILD_SUPPLY_DEPOT:
             if _BUILD_SUPPLY_DEPOT in obs.observation['available_actions']:
                 target = self.get_placement_location(obs, SUPPLY_DEPOT_SIZE)
                 if target:
@@ -269,12 +271,12 @@ class MarineBuilder(base_agent.BaseAgent):
             unit_y, unit_x = (unit_type == _TERRAN_BARRACKS).nonzero()
 
             if unit_y.any():
-                # choose random barracks
+                # choose random barracks (change later to choose the most available one)
                 i = random.randint(0, len(unit_y) - 1)
                 target = [unit_x[i], unit_y[i]]
                 return actions.FunctionCall(_SELECT_POINT, [_NOT_QUEUED, target])
 
-        elif smart_action == ACTION_BUILD_BARRACKS or self.step_count == 3000 or self.step_count == 4000 or self.step_count == 5000 or self.step_count == 6000 or self.step_count == 7000:
+        elif smart_action == ACTION_BUILD_BARRACKS:
             if _BUILD_BARRACKS in obs.observation['available_actions']:
                 target = self.get_placement_location(obs, BARRACKS_SIZE)
                 if target:
