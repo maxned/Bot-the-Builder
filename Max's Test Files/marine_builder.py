@@ -13,9 +13,6 @@ from pysc2.lib import actions
 from pysc2.lib import features
 
 MARINE_GOAL = 20
-BUILT_MARINE_REWARD = 10
-BUILT_SUPPLY_DEPOT_REWARD = 0
-BUILT_BARRACKS_REWARD = 0
 
 # Functions
 _NO_OP = actions.FUNCTIONS.no_op.id
@@ -23,10 +20,9 @@ _SELECT_POINT = actions.FUNCTIONS.select_point.id
 _BUILD_SUPPLY_DEPOT = actions.FUNCTIONS.Build_SupplyDepot_screen.id
 _BUILD_BARRACKS = actions.FUNCTIONS.Build_Barracks_screen.id
 _TRAIN_MARINE = actions.FUNCTIONS.Train_Marine_quick.id
-#_HARVEST_GATHER = actions.FUNCTIONS.Harvest_Gather_screen.id
+_HARVEST_GATHER = actions.FUNCTIONS.Harvest_Gather_screen.id
 
 # Features
-_PLAYER_RELATIVE = features.SCREEN_FEATURES.player_relative.index
 _UNIT_TYPE = features.SCREEN_FEATURES.unit_type.index
 _HIT_POINTS = features.SCREEN_FEATURES.unit_hit_points_ratio.index
 _SCREEN_HEIGHT_MAP = features.SCREEN_FEATURES.height_map.index
@@ -37,9 +33,9 @@ _TERRAN_SCV = 45
 _TERRAN_SUPPLY_DEPOT = 19
 _TERRAN_BARRACKS = 21
 _TERRAN_MARINE = 48
+_NEUTRAL_MINERAL_FIELD = 341
 
 # Parameters
-_PLAYER_SELF = 1
 _NOT_QUEUED = [0]
 _QUEUED = [1]
 
@@ -58,7 +54,7 @@ ACTION_BUILD_MARINE = 'buildmarine'
 smart_actions = [
     ACTION_DO_NOTHING,
     ACTION_SELECT_SCV,
-    # ACTION_GATHER_MINERALS, this can be added later to learn to move an idle SCV to gather
+    ACTION_GATHER_MINERALS,
     ACTION_BUILD_SUPPLY_DEPOT,
     ACTION_BUILD_BARRACKS,
     ACTION_SELECT_BARRACKS,
@@ -68,6 +64,7 @@ smart_actions = [
 # in the future add possibility to make more SCVs
 
 # taken from https://github.com/skjb/pysc2-tutorial/tree/master/Building%20a%20Smart%20Agent
+# originally from https://github.com/MorvanZhou/Reinforcement-learning-with-tensorflow/blob/master/contents/2_Q_Learning_maze/RL_brain.py
 class QLearningTable:
     def __init__(self, actions, learning_rate=0.01, reward_decay=0.9, e_greedy=0.9):
         self.actions = actions  # a list
@@ -76,13 +73,13 @@ class QLearningTable:
         self.epsilon = e_greedy
 
     def load_table_from_file(self):
-        if os.path.isfile("marine_builder.pkl"):
-            self.q_table = pd.read_pickle("marine_builder.pkl")
+        if os.path.isfile("marine_builder.csv"):
+            self.q_table = pd.read_csv("marine_builder.csv")
         else:
             self.q_table = pd.DataFrame(columns=self.actions, dtype=np.float64)
 
     def save_table_to_file(self):
-        self.q_table.to_pickle("marine_builder.pkl")
+        self.q_table.to_csv("marine_builder.csv")
 
     def choose_action(self, observation):
         self.check_state_exist(observation)
@@ -102,6 +99,10 @@ class QLearningTable:
         return action
 
     def learn(self, s, a, r, s_):
+        # do not learn if at the same state
+        if s == s_:
+            return
+
         self.check_state_exist(s_)
         self.check_state_exist(s)
 
@@ -217,9 +218,9 @@ class MarineBuilder(base_agent.BaseAgent):
         return current_state
 
     def get_reward(self, current_state, previous_state):
-        marine_reward = (current_state[0] - previous_state[0]) * BUILT_MARINE_REWARD
-        supply_depot_reward = (current_state[1] - previous_state[1]) * BUILT_SUPPLY_DEPOT_REWARD
-        barracks_reward = (current_state[2] - previous_state[2]) * BUILT_BARRACKS_REWARD
+        marine_reward = (current_state[0] - previous_state[0]) * 10
+        supply_depot_reward = (current_state[1] - previous_state[1]) * 0
+        barracks_reward = (current_state[2] - previous_state[2]) * 0
         total_reward = marine_reward + supply_depot_reward + barracks_reward
 
         # if we move the map then return to the same spot, the previous state and current will be different
@@ -227,16 +228,14 @@ class MarineBuilder(base_agent.BaseAgent):
         if total_reward > 0:
             return total_reward
         else:
-            return 0 
-
-    def reset(self):
-        self.qlearn.save_table_to_file()
-
+            return 0
+        
     def step(self, obs):
         super(MarineBuilder, self).step(obs)
 
         if obs.first():
-            print("first")
+            self.qlearn.save_table_to_file()
+            self.step_count = 0 # reset steps at beginning of episode
 
         current_state = self.get_current_state(obs)
         
@@ -244,9 +243,17 @@ class MarineBuilder(base_agent.BaseAgent):
             reward = self.get_reward(current_state, self.previous_state)
             self.qlearn.learn(str(self.previous_state), self.previous_action, reward, str(current_state))
 
+        if obs.last():
+            print("Lost with state")
+            print(current_state)
+            print()
+
         # check the number of marines and end episode if reached goal
         if current_state[0] == MARINE_GOAL:
-            
+            print("Reached goal with state")
+            print(current_state)
+            print()
+
             # reached goal so reset
             return True
 
@@ -258,11 +265,12 @@ class MarineBuilder(base_agent.BaseAgent):
 
         self.step_count += 1
 
+        unit_type = obs.observation['screen'][_UNIT_TYPE]
+
         if smart_action == ACTION_DO_NOTHING:
             return actions.FunctionCall(_NO_OP, [])
 
-        elif smart_action == ACTION_SELECT_SCV or self.step_count == 200:
-            unit_type = obs.observation['screen'][_UNIT_TYPE]
+        elif smart_action == ACTION_SELECT_SCV:
             unit_y, unit_x = (unit_type == _TERRAN_SCV).nonzero()
 
             if unit_y.any():
@@ -271,6 +279,16 @@ class MarineBuilder(base_agent.BaseAgent):
                 target = [unit_x[i], unit_y[i]]
                 return actions.FunctionCall(_SELECT_POINT, [_NOT_QUEUED, target])
 
+        elif smart_action == ACTION_GATHER_MINERALS:
+            if _HARVEST_GATHER in obs.observation['available_actions']:
+                unit_y, unit_x = (unit_type == _NEUTRAL_MINERAL_FIELD).nonzero()
+                if unit_y.any():
+                    i = random.randint(0, len(unit_y) - 1)
+                    m_x = unit_x[i]
+                    m_y = unit_y[i]
+                    target = [int(m_x), int(m_y)]
+                    return actions.FunctionCall(_HARVEST_GATHER, [_QUEUED, target])
+
         elif smart_action == ACTION_BUILD_SUPPLY_DEPOT:
             if _BUILD_SUPPLY_DEPOT in obs.observation['available_actions']:
                 target = self.get_placement_location(obs, SUPPLY_DEPOT_SIZE)
@@ -278,7 +296,6 @@ class MarineBuilder(base_agent.BaseAgent):
                     return actions.FunctionCall(_BUILD_SUPPLY_DEPOT, [_NOT_QUEUED, target])
 
         elif smart_action == ACTION_SELECT_BARRACKS:
-            unit_type = obs.observation['screen'][_UNIT_TYPE]
             unit_y, unit_x = (unit_type == _TERRAN_BARRACKS).nonzero()
 
             if unit_y.any():
