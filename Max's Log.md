@@ -1,3 +1,11 @@
+# Friday June 1
+- finished the state space for the q learner
+    - currently it includes the current number of marines, current supply depots and barracks with 100% health, and whether an scv or barracks is selected
+- finished the action space for the q learner
+    - possible actions are nothing, select scv or barracks, and build barracks, supply depot, or marine.
+    - the locations for barracks and supply depot are smartly chosen to be placed in a valid location based on whether there are any units there, or it is a valid height in the map.
+        - this is done to minimize invalid placements while still allowing for a lot of buildings to be built
+
 # Monday May 28
 - started work on my marine builder using Q-Learning
     - defined the state and action space
