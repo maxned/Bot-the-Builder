@@ -3,6 +3,7 @@ import random
 from math import *
 import time
 import pdb
+import os.path
 
 import numpy as np
 import pandas as pd
@@ -73,7 +74,15 @@ class QLearningTable:
         self.lr = learning_rate
         self.gamma = reward_decay
         self.epsilon = e_greedy
-        self.q_table = pd.DataFrame(columns=self.actions, dtype=np.float64)
+
+    def load_table_from_file(self):
+        if os.path.isfile("marine_builder.pkl"):
+            self.q_table = pd.read_pickle("marine_builder.pkl")
+        else:
+            self.q_table = pd.DataFrame(columns=self.actions, dtype=np.float64)
+
+    def save_table_to_file(self):
+        self.q_table.to_pickle("marine_builder.pkl")
 
     def choose_action(self, observation):
         self.check_state_exist(observation)
@@ -112,6 +121,7 @@ class MarineBuilder(base_agent.BaseAgent):
         super(MarineBuilder, self).__init__()
 
         self.qlearn = QLearningTable(actions=list(range(len(smart_actions))))
+        self.qlearn.load_table_from_file()
 
         self.previous_action = None
         self.previous_state = None
@@ -220,7 +230,7 @@ class MarineBuilder(base_agent.BaseAgent):
             return 0 
 
     def reset(self):
-        print("reset")
+        self.qlearn.save_table_to_file()
 
     def step(self, obs):
         super(MarineBuilder, self).step(obs)
@@ -236,7 +246,8 @@ class MarineBuilder(base_agent.BaseAgent):
 
         # check the number of marines and end episode if reached goal
         if current_state[0] == MARINE_GOAL:
-            # can get last step based on knowing if we will call reset
+            
+            # reached goal so reset
             return True
 
         rl_action = self.qlearn.choose_action(str(current_state))
