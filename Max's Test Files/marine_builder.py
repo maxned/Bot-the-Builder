@@ -24,7 +24,9 @@ from pysc2.agents import base_agent
 from pysc2.lib import actions
 from pysc2.lib import features
 
-MARINE_GOAL = 30
+MARINE_GOAL = 20
+
+MAX_STEPS_PER_EPISODE = 5000
 
 # Functions
 _NO_OP = actions.FUNCTIONS.no_op.id
@@ -78,7 +80,7 @@ smart_actions = [
 # taken from https://github.com/skjb/pysc2-tutorial/tree/master/Building%20a%20Smart%20Agent
 # originally from https://github.com/MorvanZhou/Reinforcement-learning-with-tensorflow/blob/master/contents/2_Q_Learning_maze/RL_brain.py
 class QLearningTable:
-    def __init__(self, actions, learning_rate=0.01, reward_decay=0.9, e_greedy=0.9):
+    def __init__(self, actions, learning_rate=0.1, reward_decay=0.9, e_greedy=0.9):
         self.actions = actions  # a list
         self.lr = learning_rate
         self.gamma = reward_decay
@@ -232,9 +234,22 @@ class MarineBuilder(base_agent.BaseAgent):
 
     def get_reward(self, current_state, previous_state):
         # marine reward will be highest in the beginning of the episode
-        marine_reward = (current_state[0] - previous_state[0]) * (1000 / (self.step_count + 1)) # do not divide by zero
-        supply_depot_reward = (current_state[1] - previous_state[1]) * -1
-        barracks_reward = (current_state[2] - previous_state[2]) * 1
+        # only add reward if we built a unit (if a unit is destroyed do not add negative reward)
+        if (current_state[0] > previous_state[0]):
+            marine_reward = (current_state[0] - previous_state[0]) * (5000 / (self.step_count + 1)) # do not divide by zero
+        else:
+            marine_reward = 0
+        
+        if (current_state[1] > previous_state[1]):
+            supply_depot_reward = (current_state[1] - previous_state[1]) * -2
+        else:
+            supply_depot_reward = 0
+
+        if (current_state[2] > previous_state[2]):
+            barracks_reward = (current_state[2] - previous_state[2]) * -2
+        else:
+            barracks_reward = 0
+
         total_reward = marine_reward + supply_depot_reward + barracks_reward
 
         # if we move the map then return to the same spot, the previous state and current will be different
@@ -266,10 +281,14 @@ class MarineBuilder(base_agent.BaseAgent):
         if obs.last():
             self.finished_episode(current_state)
 
-        # check the number of marines and end episode if reached goal
-        if current_state[0] == MARINE_GOAL:
-            self.finished_episode(current_state)
+        unit_type = obs.observation['screen'][_UNIT_TYPE]
 
+        # check the number of marines and end episode if reached goal
+        # or if reached step_count of current episode
+        # or if command center was destroyed since we will not build one again
+        unit_y, _ = (unit_type == _TERRAN_COMMANDCENTER).nonzero()
+        if current_state[0] >= MARINE_GOAL or self.step_count == MAX_STEPS_PER_EPISODE or not unit_y.any():
+            self.finished_episode(current_state)
             # reached goal so reset
             return True
 
@@ -280,8 +299,6 @@ class MarineBuilder(base_agent.BaseAgent):
         self.previous_action = rl_action
 
         self.step_count += 1
-
-        unit_type = obs.observation['screen'][_UNIT_TYPE]
 
         if smart_action == ACTION_DO_NOTHING:
             return actions.FunctionCall(_NO_OP, [])

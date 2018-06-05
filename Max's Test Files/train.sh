@@ -4,5 +4,5 @@ python3 -m pysc2.bin.agent \
 --agent_race T \
 --max_agent_steps 0 \
 --parallel 1 \
---step_mul 4 \
+--step_mul 6 \
 --norender
