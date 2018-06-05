@@ -13,6 +13,7 @@ neighbors_values = [5,10,15,20]
 # Uploading all the win/lose replays into dataframes to make it more manegable
 data = pd.read_csv(os.path.join(".", "Units-1311.csv"))
 
+#this needs to be in the same folder as thr KNN.py file
 game_data = pd.read_csv(os.path.join(".", "parsed_replay.csv"))
 game_data = game_data.iloc[:,1:] #if we use the parsing from replay we need to
 #get rid of the column that says if the game was a win or loss
