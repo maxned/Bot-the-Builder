@@ -13,7 +13,7 @@
     - right before `timesteps = env.step(actions)` add 
     ```python
      if True in actions:
-          break
+        break
     ```
 
 # Friday June 1

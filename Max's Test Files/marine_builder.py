@@ -1,3 +1,9 @@
+'''
+Before running, make sure to add the following 2 lines in pysc2/env/run_loop.py
+right before "timesteps = env.step(actions)":
+if True in actions:
+    break
+'''
 
 import random
 from math import *
