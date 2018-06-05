@@ -3,6 +3,12 @@ Before running, make sure to add the following 2 lines in pysc2/env/run_loop.py
 right before "timesteps = env.step(actions)":
 if True in actions:
     break
+
+Useful websites for information:
+https://itnext.io/how-to-locate-and-select-units-in-pysc2-2bb1c81f2ad3
+https://itnext.io/refine-your-sparse-pysc2-agent-a3feb189bc68
+https://github.com/deepmind/pysc2/blob/master/docs/environment.md
+https://steemit.com/steemstem/@cpufronz/building-a-bot-for-starcraft-ii-2-the-starcraft-ii-environment
 '''
 
 import random
