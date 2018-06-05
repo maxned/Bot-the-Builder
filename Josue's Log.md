@@ -25,3 +25,8 @@
 # Monday May 29
 * Reviewed @Matthew's creation of the Tkinter GUI
 * Researched methods of feeding information of mutiple K values with their probabilities of [winning](https://askubuntu.com/questions/973140/running-command-periodically-and-save-output-to-a-csv-file)
+
+# Monday June 4
+* have been able to package up data to a csv file in order to use in the GUI that Matthew made. 
+* kept it in a notebook so that we can run more test such as different numbers of neighbors
+* Our output CSV file will only contain the second  and the probability of winning
