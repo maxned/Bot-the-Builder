@@ -1,6 +1,8 @@
 # Monday June 4
-- first run of the Q learning agent to build marines
-    - on the first run it figured out how to build marines but that was just luck (now I have to train the agent)
+- Q learning bot is now able to make marines and trains itself
+    - `marine_builder.csv` holds the q table in a human readable format while the `marine_builder.pkl` holds the q table for the algorithm
+    - q table is saved at the end of each game so it is possible to interrupt the learning and continue from where it left off
+    - just run the `train.sh` script to run and train the bot
 
 # Sunday June 3
 - worked on making it possible to reset the game early
