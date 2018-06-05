@@ -12,7 +12,7 @@ from pysc2.agents import base_agent
 from pysc2.lib import actions
 from pysc2.lib import features
 
-MARINE_GOAL = 20
+MARINE_GOAL = 30
 
 # Functions
 _NO_OP = actions.FUNCTIONS.no_op.id
@@ -58,7 +58,7 @@ smart_actions = [
     ACTION_BUILD_SUPPLY_DEPOT,
     ACTION_BUILD_BARRACKS,
     ACTION_SELECT_BARRACKS,
-    ACTION_BUILD_MARINE
+    ACTION_BUILD_MARINE,
 ]
 
 # in the future add possibility to make more SCVs
@@ -73,13 +73,15 @@ class QLearningTable:
         self.epsilon = e_greedy
 
     def load_table_from_file(self):
-        if os.path.isfile("marine_builder.csv"):
-            self.q_table = pd.read_csv("marine_builder.csv")
+        if os.path.isfile("marine_builder.pkl"):
+            self.q_table = pd.read_pickle("marine_builder.pkl")
         else:
             self.q_table = pd.DataFrame(columns=self.actions, dtype=np.float64)
 
     def save_table_to_file(self):
+        self.q_table.to_pickle("marine_builder.pkl")
         self.q_table.to_csv("marine_builder.csv")
+        # also output a csv for me to look at
 
     def choose_action(self, observation):
         self.check_state_exist(observation)
@@ -157,7 +159,6 @@ class MarineBuilder(base_agent.BaseAgent):
                 #yield (x, y)
                 check.extend([(x+1, y, w-1, 0), (x, y+1, 0, h-1)])
                 continue
-        
         return items
 
     # returns a tuple of the best location for a unit of any size on the current screen
@@ -218,9 +219,10 @@ class MarineBuilder(base_agent.BaseAgent):
         return current_state
 
     def get_reward(self, current_state, previous_state):
-        marine_reward = (current_state[0] - previous_state[0]) * 10
-        supply_depot_reward = (current_state[1] - previous_state[1]) * 0
-        barracks_reward = (current_state[2] - previous_state[2]) * 0
+        # marine reward will be highest in the beginning of the episode
+        marine_reward = (current_state[0] - previous_state[0]) * (1000 / (self.step_count + 1)) # do not divide by zero
+        supply_depot_reward = (current_state[1] - previous_state[1]) * -1
+        barracks_reward = (current_state[2] - previous_state[2]) * 1
         total_reward = marine_reward + supply_depot_reward + barracks_reward
 
         # if we move the map then return to the same spot, the previous state and current will be different
@@ -229,12 +231,18 @@ class MarineBuilder(base_agent.BaseAgent):
             return total_reward
         else:
             return 0
-        
+    
+    def finished_episode(self, current_state):
+        self.qlearn.save_table_to_file()
+        print("Finished with state")
+        print(current_state)
+        print(self.step_count)
+        print()
+
     def step(self, obs):
         super(MarineBuilder, self).step(obs)
 
         if obs.first():
-            self.qlearn.save_table_to_file()
             self.step_count = 0 # reset steps at beginning of episode
 
         current_state = self.get_current_state(obs)
@@ -244,15 +252,11 @@ class MarineBuilder(base_agent.BaseAgent):
             self.qlearn.learn(str(self.previous_state), self.previous_action, reward, str(current_state))
 
         if obs.last():
-            print("Lost with state")
-            print(current_state)
-            print()
+            self.finished_episode(current_state)
 
         # check the number of marines and end episode if reached goal
         if current_state[0] == MARINE_GOAL:
-            print("Reached goal with state")
-            print(current_state)
-            print()
+            self.finished_episode(current_state)
 
             # reached goal so reset
             return True
