@@ -1,3 +1,12 @@
+# Tuesday June 5
+- spent the day trying to improve the q learning to help the algorthm to converge
+- setup a new linux server on AWS to hopefully increase the training speed
+- worked on reducing the state space to make convergence possible by limiting the total number of units that can be built of a certain type
+- now realize a genetic algorithm may have been better than the q learning because it is easier to represent the large state and action space
+    - with a genetic algorithm, the gene space might be the order that units are built in and the fitness function may be how fast that gene reached a goal of building 20 marines
+    - that way, it would have been easier to converge to a good gene instead of basically having to explore a large state space with the q learner
+    - the state space in the genetic algorithm would not matter (just the final result of the number of marines would dictate how well that gene is)
+
 # Monday June 4
 - Q learning bot is now able to make marines and trains itself
     - `marine_builder.csv` holds the q table in a human readable format while the `marine_builder.pkl` holds the q table for the algorithm
