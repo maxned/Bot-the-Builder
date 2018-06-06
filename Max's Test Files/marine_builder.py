@@ -25,6 +25,8 @@ from pysc2.lib import actions
 from pysc2.lib import features
 
 MARINE_GOAL = 20
+MAX_SUPPLY_DEPOTS = 2
+MAX_BARRACKS = 5
 
 MAX_STEPS_PER_EPISODE = 5000
 
@@ -79,8 +81,11 @@ smart_actions = [
 
 # taken from https://github.com/skjb/pysc2-tutorial/tree/master/Building%20a%20Smart%20Agent
 # originally from https://github.com/MorvanZhou/Reinforcement-learning-with-tensorflow/blob/master/contents/2_Q_Learning_maze/RL_brain.py
+
+# make epsilon increase over time to reduce the random exploration
+# make discount factor gamma increase over time until the final value
 class QLearningTable:
-    def __init__(self, actions, learning_rate=0.1, reward_decay=0.9, e_greedy=0.9):
+    def __init__(self, actions, learning_rate=0.2, reward_decay=0.7, e_greedy=0.9):
         self.actions = actions  # a list
         self.lr = learning_rate
         self.gamma = reward_decay
@@ -116,8 +121,8 @@ class QLearningTable:
 
     def learn(self, s, a, r, s_):
         # do not learn if at the same state
-        if s == s_:
-            return
+        #if s == s_:
+            #return
 
         self.check_state_exist(s_)
         self.check_state_exist(s)
@@ -140,10 +145,13 @@ class MarineBuilder(base_agent.BaseAgent):
         self.qlearn = QLearningTable(actions=list(range(len(smart_actions))))
         self.qlearn.load_table_from_file()
 
+        self.illegal_actions = []
+
         self.previous_action = None
         self.previous_state = None
 
         self.step_count = 0
+        self.total_step_count = 0
 
     # code taken from https://softwareengineering.stackexchange.com/questions/206298/finding-possible-positions-for-rectangle-in-a-2-d-array
     # returns a list of tuples of the coordinates that are valid by looking for zeroes in the grid
@@ -235,18 +243,18 @@ class MarineBuilder(base_agent.BaseAgent):
     def get_reward(self, current_state, previous_state):
         # marine reward will be highest in the beginning of the episode
         # only add reward if we built a unit (if a unit is destroyed do not add negative reward)
-        if (current_state[0] > previous_state[0]):
-            marine_reward = (current_state[0] - previous_state[0]) * (5000 / (self.step_count + 1)) # do not divide by zero
+        if (current_state[0] > previous_state[0]): # average game is around 2000 steps so reward is about 2.something points
+            marine_reward = (current_state[0] - previous_state[0]) * (MAX_STEPS_PER_EPISODE / (self.step_count + 1)) # do not divide by zero
         else:
             marine_reward = 0
         
-        if (current_state[1] > previous_state[1]):
-            supply_depot_reward = (current_state[1] - previous_state[1]) * -2
+        if (current_state[1] > MAX_SUPPLY_DEPOTS):
+            supply_depot_reward = -1
         else:
             supply_depot_reward = 0
 
-        if (current_state[2] > previous_state[2]):
-            barracks_reward = (current_state[2] - previous_state[2]) * -2
+        if (current_state[2] > MAX_BARRACKS):
+            barracks_reward = -1
         else:
             barracks_reward = 0
 
@@ -261,18 +269,23 @@ class MarineBuilder(base_agent.BaseAgent):
     
     def finished_episode(self, current_state):
         self.qlearn.save_table_to_file()
+        self.illegal_actions = []
+        self.step_count = 0 # reset steps at beginning of episode
         print("Finished with state")
         print(current_state)
         print(self.step_count)
         print()
 
     def step(self, obs):
-        super(MarineBuilder, self).step(obs)
-
-        if obs.first():
-            self.step_count = 0 # reset steps at beginning of episode
+        super(MarineBuilder, self).step(obs)            
 
         current_state = self.get_current_state(obs)
+
+        if current_state[1] > MAX_SUPPLY_DEPOTS and ACTION_BUILD_SUPPLY_DEPOT not in self.illegal_actions:
+            self.illegal_actions.append(ACTION_BUILD_SUPPLY_DEPOT)
+        
+        if current_state[2] > MAX_BARRACKS and ACTION_BUILD_BARRACKS not in self.illegal_actions:
+            self.illegal_actions.append(ACTION_BUILD_BARRACKS)
         
         if self.previous_action is not None and self.previous_state is not None:
             reward = self.get_reward(current_state, self.previous_state)
@@ -295,10 +308,14 @@ class MarineBuilder(base_agent.BaseAgent):
         rl_action = self.qlearn.choose_action(str(current_state))
         smart_action = smart_actions[rl_action]
 
+        if smart_action in self.illegal_actions:
+            smart_action = ACTION_DO_NOTHING
+
         self.previous_state = current_state
         self.previous_action = rl_action
 
         self.step_count += 1
+        self.total_step_count += 1
 
         if smart_action == ACTION_DO_NOTHING:
             return actions.FunctionCall(_NO_OP, [])
