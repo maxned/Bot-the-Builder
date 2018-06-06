@@ -30,6 +30,11 @@ MAX_BARRACKS = 5
 
 MAX_STEPS_PER_EPISODE = 5000
 
+# these are approximations (steps could change between games)
+STEPS_BUILD_SUPPLY_DEPOT = 140
+STEPS_BUILD_BARRACKS = 284
+STEPS_BUILD_MARINE = 100
+
 # Functions
 _NO_OP = actions.FUNCTIONS.no_op.id
 _SELECT_POINT = actions.FUNCTIONS.select_point.id
@@ -77,13 +82,12 @@ smart_actions = [
     ACTION_BUILD_MARINE,
 ]
 
-# in the future add possibility to make more SCVs
-
 # taken from https://github.com/skjb/pysc2-tutorial/tree/master/Building%20a%20Smart%20Agent
 # originally from https://github.com/MorvanZhou/Reinforcement-learning-with-tensorflow/blob/master/contents/2_Q_Learning_maze/RL_brain.py
 
-# make epsilon increase over time to reduce the random exploration
+# try the following:
 # make discount factor gamma increase over time until the final value
+# make epsilon increase over time to reduce the random exploration
 class QLearningTable:
     def __init__(self, actions, learning_rate=0.2, reward_decay=0.7, e_greedy=0.9):
         self.actions = actions  # a list
@@ -152,6 +156,10 @@ class MarineBuilder(base_agent.BaseAgent):
 
         self.step_count = 0
         self.total_step_count = 0
+
+        self.build_barracks_steps = 0
+        self.build_supply_depot_steps = 0
+        self.build_marine_steps = 0
 
     # code taken from https://softwareengineering.stackexchange.com/questions/206298/finding-possible-positions-for-rectangle-in-a-2-d-array
     # returns a list of tuples of the coordinates that are valid by looking for zeroes in the grid
@@ -244,7 +252,7 @@ class MarineBuilder(base_agent.BaseAgent):
         # marine reward will be highest in the beginning of the episode
         # only add reward if we built a unit (if a unit is destroyed do not add negative reward)
         if (current_state[0] > previous_state[0]): # average game is around 2000 steps so reward is about 2.something points
-            marine_reward = (current_state[0] - previous_state[0]) * (MAX_STEPS_PER_EPISODE / (self.step_count + 1)) # do not divide by zero
+            marine_reward = (current_state[0] - previous_state[0]) * (MAX_STEPS_PER_EPISODE * 10 / (self.step_count + 1)) # do not divide by zero
         else:
             marine_reward = 0
         
@@ -270,23 +278,33 @@ class MarineBuilder(base_agent.BaseAgent):
     def finished_episode(self, current_state):
         self.qlearn.save_table_to_file()
         self.illegal_actions = []
-        self.step_count = 0 # reset steps at beginning of episode
         print("Finished with state")
         print(current_state)
         print(self.step_count)
         print()
+        self.step_count = 0 # reset steps at beginning of episode
+        self.build_barracks_steps = 0
+        self.build_supply_depot_steps = 0
+        self.build_marine_steps = 0
 
     def step(self, obs):
         super(MarineBuilder, self).step(obs)            
 
         current_state = self.get_current_state(obs)
 
-        if current_state[1] > MAX_SUPPLY_DEPOTS and ACTION_BUILD_SUPPLY_DEPOT not in self.illegal_actions:
+        # update illegal actions
+        self.illegal_actions = []
+        if (self.build_supply_depot_steps > 0 or current_state[1] > MAX_SUPPLY_DEPOTS) and ACTION_BUILD_SUPPLY_DEPOT not in self.illegal_actions:
             self.illegal_actions.append(ACTION_BUILD_SUPPLY_DEPOT)
         
-        if current_state[2] > MAX_BARRACKS and ACTION_BUILD_BARRACKS not in self.illegal_actions:
+        if (self.build_barracks_steps > 0 or current_state[2] > MAX_BARRACKS) and ACTION_BUILD_BARRACKS not in self.illegal_actions:
             self.illegal_actions.append(ACTION_BUILD_BARRACKS)
+
+        # allow building new marines before one stops training
+        if self.build_marine_steps > STEPS_BUILD_MARINE / 4 and ACTION_BUILD_MARINE not in self.illegal_actions:
+            self.illegal_actions.append(ACTION_BUILD_MARINE)
         
+        # learn
         if self.previous_action is not None and self.previous_state is not None:
             reward = self.get_reward(current_state, self.previous_state)
             self.qlearn.learn(str(self.previous_state), self.previous_action, reward, str(current_state))
@@ -305,6 +323,7 @@ class MarineBuilder(base_agent.BaseAgent):
             # reached goal so reset
             return True
 
+        # choose action
         rl_action = self.qlearn.choose_action(str(current_state))
         smart_action = smart_actions[rl_action]
 
@@ -316,6 +335,17 @@ class MarineBuilder(base_agent.BaseAgent):
 
         self.step_count += 1
         self.total_step_count += 1
+
+        # reduce until 0 to signify finished building the unit so can call same action again
+        # doing this to try to make actions have a measurable result on the state space
+        if self.build_supply_depot_steps > 0:
+            self.build_supply_depot_steps -= 1
+
+        if self.build_barracks_steps > 0:
+            self.build_barracks_steps -= 1
+        
+        if self.build_marine_steps > 0:
+            self.build_marine_steps -= 1
 
         if smart_action == ACTION_DO_NOTHING:
             return actions.FunctionCall(_NO_OP, [])
@@ -343,7 +373,15 @@ class MarineBuilder(base_agent.BaseAgent):
             if _BUILD_SUPPLY_DEPOT in obs.observation['available_actions']:
                 target = self.get_placement_location(obs, SUPPLY_DEPOT_SIZE)
                 if target:
+                    self.build_supply_depot_steps = STEPS_BUILD_SUPPLY_DEPOT
                     return actions.FunctionCall(_BUILD_SUPPLY_DEPOT, [_NOT_QUEUED, target])
+
+        elif smart_action == ACTION_BUILD_BARRACKS:
+            if _BUILD_BARRACKS in obs.observation['available_actions']:
+                target = self.get_placement_location(obs, BARRACKS_SIZE)
+                if target:
+                    self.build_barracks_steps = STEPS_BUILD_BARRACKS
+                    return actions.FunctionCall(_BUILD_BARRACKS, [_NOT_QUEUED, target])
 
         elif smart_action == ACTION_SELECT_BARRACKS:
             unit_y, unit_x = (unit_type == _TERRAN_BARRACKS).nonzero()
@@ -354,14 +392,9 @@ class MarineBuilder(base_agent.BaseAgent):
                 target = [unit_x[i], unit_y[i]]
                 return actions.FunctionCall(_SELECT_POINT, [_NOT_QUEUED, target])
 
-        elif smart_action == ACTION_BUILD_BARRACKS:
-            if _BUILD_BARRACKS in obs.observation['available_actions']:
-                target = self.get_placement_location(obs, BARRACKS_SIZE)
-                if target:
-                    return actions.FunctionCall(_BUILD_BARRACKS, [_NOT_QUEUED, target])
-
         elif smart_action == ACTION_BUILD_MARINE:
             if _TRAIN_MARINE in obs.observation['available_actions']:
+                self.build_marine_steps = STEPS_BUILD_MARINE
                 return actions.FunctionCall(_TRAIN_MARINE, [_QUEUED])
 
         return actions.FunctionCall(_NO_OP, [])
