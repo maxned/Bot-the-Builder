@@ -19,14 +19,14 @@ Libraries Needed:
 5. The the scrip will ask user for the name of the single game replay followed by another prompt asking if it is in raw format
 6. The scrip will continue and create **4 csv** files containing the probabilities at each time step of the replay. The difference in csv files is the number of *k* selected (5,10,15,20)
 
-Example of Raw csv format:
+Example of Raw csv format:<br/>
 | winner        | opponent      | seconds|
 | -------------:|:-------------:| -----: |
 | 0             | Z             |     0  |
 | 0             | Z             |     10 |
 | 0             | Z             |     15 |
 
-Example of other acceptable csv format:
+Example of other acceptable csv format:<br/>
 |     | winner        | opponent      | seconds|
 |---  | -------------:|:-------------:| -----: |
 | 97  | 0             | 1             |     0  |
