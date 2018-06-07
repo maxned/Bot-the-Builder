@@ -1,3 +1,9 @@
+# Wednesday June 6
+- worked on improving the learning algorithm to learn better
+    - ran the algorithm overnight for 1536 games but it was very slow and inefficient at building units
+    - the algorithm is still limited from building units too quickly (this is worse in real life because you could start building things at the same time but it should improve the learning to explore less and stop calling the same action)
+        - this could be fixed if the algorithm could independently decide on which unit to select and can check if a unit is being built and its progress but this would make the state space much bigger
+
 # Tuesday June 5
 - spent the day trying to improve the q learning to help the algorthm to converge
 - setup a new linux server on AWS to hopefully increase the training speed

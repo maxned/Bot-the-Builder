@@ -25,12 +25,12 @@ from pysc2.lib import actions
 from pysc2.lib import features
 
 MARINE_GOAL = 20
-MAX_SUPPLY_DEPOTS = 2
+MAX_SUPPLY_DEPOTS = 3
 MAX_BARRACKS = 5
 
 MAX_STEPS_PER_EPISODE = 5000
 
-# these are approximations (steps could change between games)
+# these are approximations (steps could change slightly between games)
 STEPS_BUILD_SUPPLY_DEPOT = 140
 STEPS_BUILD_BARRACKS = 284
 STEPS_BUILD_MARINE = 100
@@ -87,13 +87,19 @@ smart_actions = [
 
 # try the following:
 # make discount factor gamma increase over time until the final value
-# make epsilon increase over time to reduce the random exploration
+# make epsilon decrease over time to reduce the random exploration
 class QLearningTable:
-    def __init__(self, actions, learning_rate=0.2, reward_decay=0.7, e_greedy=0.9):
+    alpha = 1
+    epsilon = 1
+    min_alpha = 0.1
+    min_epsilon = 0.1
+    gamma = 0.9 # consider future rewards more
+
+    decay_rate = 250000 # chosen so after about 400 games we will hit the minimum epsilon
+
+    def __init__(self, actions):
         self.actions = actions  # a list
-        self.lr = learning_rate
-        self.gamma = reward_decay
-        self.epsilon = e_greedy
+        self.update_q_parameters(0)
 
     def load_table_from_file(self):
         if os.path.isfile("marine_builder.pkl"):
@@ -109,7 +115,7 @@ class QLearningTable:
     def choose_action(self, observation):
         self.check_state_exist(observation)
 
-        if np.random.uniform() < self.epsilon:
+        if np.random.uniform() > self.epsilon:
             # choose best action
             state_action = self.q_table.ix[observation, :]
 
@@ -123,10 +129,10 @@ class QLearningTable:
 
         return action
 
-    def learn(self, s, a, r, s_):
+    def learn(self, s, a, r, s_, last=False):
         # do not learn if at the same state
-        #if s == s_:
-            #return
+        if s == s_:
+            return
 
         self.check_state_exist(s_)
         self.check_state_exist(s)
@@ -134,13 +140,19 @@ class QLearningTable:
         q_predict = self.q_table.ix[s, a]
         q_target = r + self.gamma * self.q_table.ix[s_, :].max()
 
-        # update
-        self.q_table.ix[s, a] += self.lr * (q_target - q_predict)
-
+        if last:
+            self.q_table.ix[s, a] += r
+        else:
+            self.q_table.ix[s, a] += self.alpha * (q_target - q_predict)
+        
     def check_state_exist(self, state):
         if state not in self.q_table.index:
             # append new state to q table
             self.q_table = self.q_table.append(pd.Series([0] * len(self.actions), index=self.q_table.columns, name=state))
+
+    def update_q_parameters(self, step_count):
+        self.epsilon = max(self.min_epsilon, 1.0 - log10((step_count + 1) / self.decay_rate))
+        self.alpha = max(self.min_alpha, 1.0 - log10((step_count + 1) / self.decay_rate))
 
 class MarineBuilder(base_agent.BaseAgent):
     def __init__(self):
@@ -252,7 +264,7 @@ class MarineBuilder(base_agent.BaseAgent):
         # marine reward will be highest in the beginning of the episode
         # only add reward if we built a unit (if a unit is destroyed do not add negative reward)
         if (current_state[0] > previous_state[0]): # average game is around 2000 steps so reward is about 2.something points
-            marine_reward = (current_state[0] - previous_state[0]) * (MAX_STEPS_PER_EPISODE * 10 / (self.step_count + 1)) # do not divide by zero
+            marine_reward = (current_state[0] - previous_state[0]) * (MAX_STEPS_PER_EPISODE / (self.step_count + 1)) # do not divide by zero
         else:
             marine_reward = 0
         
@@ -286,18 +298,24 @@ class MarineBuilder(base_agent.BaseAgent):
         self.build_barracks_steps = 0
         self.build_supply_depot_steps = 0
         self.build_marine_steps = 0
+        self.previous_action = None
+        self.previous_state = None
 
     def step(self, obs):
         super(MarineBuilder, self).step(obs)            
+
+        self.qlearn.update_q_parameters(self.total_step_count)
 
         current_state = self.get_current_state(obs)
 
         # update illegal actions
         self.illegal_actions = []
-        if (self.build_supply_depot_steps > 0 or current_state[1] > MAX_SUPPLY_DEPOTS) and ACTION_BUILD_SUPPLY_DEPOT not in self.illegal_actions:
+        # or current_state[1] > MAX_SUPPLY_DEPOTS) do not allow to build more supply depots
+        if self.build_supply_depot_steps > 0 and ACTION_BUILD_SUPPLY_DEPOT not in self.illegal_actions:
             self.illegal_actions.append(ACTION_BUILD_SUPPLY_DEPOT)
         
-        if (self.build_barracks_steps > 0 or current_state[2] > MAX_BARRACKS) and ACTION_BUILD_BARRACKS not in self.illegal_actions:
+        # or current_state[2] > MAX_BARRACKS) do not allow to build more barracks
+        if self.build_barracks_steps > 0 and ACTION_BUILD_BARRACKS not in self.illegal_actions:
             self.illegal_actions.append(ACTION_BUILD_BARRACKS)
 
         # allow building new marines before one stops training
@@ -320,6 +338,10 @@ class MarineBuilder(base_agent.BaseAgent):
         unit_y, _ = (unit_type == _TERRAN_COMMANDCENTER).nonzero()
         if current_state[0] >= MARINE_GOAL or self.step_count == MAX_STEPS_PER_EPISODE or not unit_y.any():
             self.finished_episode(current_state)
+
+            if self.previous_action is not None and self.previous_state is not None:
+                reward = self.get_reward(current_state, self.previous_state)
+                self.qlearn.learn(str(self.previous_state), self.previous_action, reward, str(current_state), True)
             # reached goal so reset
             return True
 
@@ -329,9 +351,10 @@ class MarineBuilder(base_agent.BaseAgent):
 
         if smart_action in self.illegal_actions:
             smart_action = ACTION_DO_NOTHING
+        else:
+            self.previous_action = rl_action
 
         self.previous_state = current_state
-        self.previous_action = rl_action
 
         self.step_count += 1
         self.total_step_count += 1
