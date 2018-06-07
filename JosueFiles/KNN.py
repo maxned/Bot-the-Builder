@@ -10,15 +10,22 @@ from sklearn.neighbors import KNeighborsClassifier
 
 neighbors_values = [5,10,15,20]
 
+#ask user for names of input files
+filename1 = raw_input('Enter 1k parsed filename: ')
+filename2 = raw_input('Enter single game filename: ')
+
 # Uploading all the win/lose replays into dataframes to make it more manegable
 #in this case the csv file has column 0 as the index which we will use so that 
 # KNN does not use column to add to dimension
-data = pd.read_csv(os.path.join(".", "1Units-1311.csv"), index_col = 0)
+data = pd.read_csv(os.path.join(".", filename1), index_col = 0)
+#data = pd.read_csv(os.path.join(".", "1Units-1311.csv"), index_col = 0)
 
 #this needs to be in the same folder as thr KNN.py file
 #in this case the csv file has column 0 as the index which we will use so that 
 # KNN does not use column to add to dimension
-game_data = pd.read_csv(os.path.join(".", "parsed_replay.csv"), index_col = 0)
+
+game_data = pd.read_csv(os.path.join(".", filename2), index_col = 0)
+#game_data = pd.read_csv(os.path.join(".", "parsed_replay.csv"), index_col = 0)
 
 """ Section 1:
  Uncommet following code if there is data that has not been relabeled
