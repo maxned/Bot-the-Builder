@@ -27,7 +27,7 @@ Example of Raw csv format:<br/>
 | 0             | Z             |     10 |
 | 0             | Z             |     15 |
 
-Example of other acceptable csv format:<br/>
+Example of other acceptable csv format (which contains index number in col 0:<br/>
 
 |     | winner        | opponent      | seconds|
 |---  | -------------:|:-------------:| -----: |
