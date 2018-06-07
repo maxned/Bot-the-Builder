@@ -12,9 +12,13 @@ Libraries Needed:
 
  Using `KNN.py`
 ---
-1. Ensure that `"Units-1311.csv"` file which contains over 1k parsed replays is in the same directory as `KNN.py`
-2. Ensure that `"parsed_replay.csv"` file is is the replay which we plan to evaluate is also in the same directory
-3. Run the python file using `bash runKNN.sh` which will automatically run the python script and create **4 csv** files containing the probabilities at each time step of the replay. The difference in csv files is the number of *k* selected, giving us a view of the potential for including too many or too little neighbors in making a prediction. 
+1. Ensure that the csv file of the 1k parsed data is in the local folder of `KNN.py`
+2. Ensure that the data for the game we are interested in determining its outcome is also in the local folder of `KNN.py`
+3. Run the python file using `bash runKNN.sh`
+4. The script will prompt user for name of 1k parsed file followed the a prompt asking if the 0th column of the csv file contains the index which **needs** to be ignored for KNN 
+5. The scrip will continue and create **4 csv** files containing the probabilities at each time step of the replay. The difference in csv files is the number of *k* selected (5,10,15,20)
+
+Having these four separate files gives us an insight in how there needs to be some fine tuning in determining how many neighbors we should select to make a better prediction. 
 
 
 

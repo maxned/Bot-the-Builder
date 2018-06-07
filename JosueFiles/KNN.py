@@ -11,44 +11,48 @@ from sklearn.neighbors import KNeighborsClassifier
 neighbors_values = [5,10,15,20]
 
 #ask user for names of input files
-filename1 = raw_input('Enter 1k parsed filename: ')
-filename2 = raw_input('Enter single game filename: ')
+filename1 = raw_input("Enter 1k parsed filename: ")
+is_raw_parsed1 = raw_input("Is 1k replays raw fortmat? (y/n): ")
+
+
+filename2 = raw_input("\n\nEnter single game filename: ")
+is_raw_parsed2 = raw_input("Is replay raw fortmat? (y/n): ")
+
+print("\n\n")
 
 # Uploading all the win/lose replays into dataframes to make it more manegable
 #in this case the csv file has column 0 as the index which we will use so that 
 # KNN does not use column to add to dimension
-data = pd.read_csv(os.path.join(".", filename1), index_col = 0)
-#data = pd.read_csv(os.path.join(".", "1Units-1311.csv"), index_col = 0)
+if(is_raw_parsed1 == "y" or is_raw_parsed1 == "Y"):
+    data = pd.read_csv(os.path.join(".", filename1))
+    data.replace({'opponent' : { 'T' : 1, 'Z' : 2, 'P' : 3 }}, inplace =True)
+
+else:
+    data = pd.read_csv(os.path.join(".", filename1), index_col = 0)
 
 #this needs to be in the same folder as thr KNN.py file
 #in this case the csv file has column 0 as the index which we will use so that 
 # KNN does not use column to add to dimension
+if (is_raw_parsed2 == "y" or is_raw_parsed2 == "Y"):
+    game_data = pd.read_csv(os.path.join(".", filename2))
+    #get rid of the column that says if the game was a win or loss
+    game_data = game_data.iloc[:,1:] 
+    #replace the value of who they played against
+    game_data.replace({'opponent' : { 'T' : 1, 'Z' : 2, 'P' : 3 }}, inplace =True)
+    
+else:
+    game_data = pd.read_csv(os.path.join(".", filename2), index_col = 0)
 
-game_data = pd.read_csv(os.path.join(".", filename2), index_col = 0)
-#game_data = pd.read_csv(os.path.join(".", "parsed_replay.csv"), index_col = 0)
 
-""" Section 1:
- Uncommet following code if there is data that has not been relabeled
-in the opponent category """
-#game_data = game_data.iloc[:,1:] #if we use the parsing from replay we need to
-#get rid of the column that says if the game was a win or loss
-#replace the value of who they played against
-
-#game_data.replace({'opponent' : { 'T' : 1, 'Z' : 2, 'P' : 3 }}, inplace =True)
-
-#replacing the column of oppponent from strings to ints, pretty self explanitory
-#data.replace({'opponent' : { 'T' : 1, 'Z' : 2, 'P' : 3 }}, inplace =True)
-"""end of Section 1 """
-
+""" Section 2:
+Following section is in case you want to split the data and see how well it scores
+We have already tested our data and have an acduracy of 0.80 """
 #we are splitting up the data into the X values and y values 
 # X is the inputs which is composed of various pieces of information
 #y is the output which in our case is weather the player won or lost
 #X = data.iloc[:,1:]
 #y = data['winner']
 
-""" Section 2:
-Following section is in case you want to split the data and see how well it scores
-We have already tested our data and have an acduracy of 0.80 """
 # the method train_test_split will split the dataframe into random train and test subsets 
 #X_train, X_test, y_train, y_test = train_test_split(X,y, random_state = 42)
 """end of section 2 """
@@ -90,7 +94,7 @@ for num_neighbors in neighbors_values:
     #this gives us the entire average probability of the entire game winning
     #if we want to check out how well our prediction did for the whole game
     probability_of_entire_game_win = reduce(lambda x, y: x + y, prediction_list)/len(prediction_list)
-    print("Overall Win Prob of game with k=", num_neighbors, " is: ", probability_of_entire_game_win)
+    print("Average Win Prob of game with k=", num_neighbors, " is: ", probability_of_entire_game_win)
 
     #creating a smaller dataframe that will only contain the seconds of the game
     # and the prediction for each of those time steps
