@@ -11,6 +11,9 @@ of a player winning at any given time.
 Replay Parser
 ---
 * The parser iterates over the 1k+ replays selecting 91 predetermined labels
+* It dumps the data of the 91 lables by time step into a csv file `"Units-1311.csv"`
+* It is also used to parse through the replay which we want to make predictions into another csv file `"parsed_replay.csv"`
+
 
 Q-Learning
 ---
