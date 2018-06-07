@@ -20,6 +20,7 @@ Libraries Needed:
 6. The scrip will continue and create **4 csv** files containing the probabilities at each time step of the replay. The difference in csv files is the number of *k* selected (5,10,15,20)
 
 Example of Raw csv format:<br/>
+
 | winner        | opponent      | seconds|
 | -------------:|:-------------:| -----: |
 | 0             | Z             |     0  |
@@ -27,6 +28,7 @@ Example of Raw csv format:<br/>
 | 0             | Z             |     15 |
 
 Example of other acceptable csv format:<br/>
+
 |     | winner        | opponent      | seconds|
 |---  | -------------:|:-------------:| -----: |
 | 97  | 0             | 1             |     0  |
