@@ -79,10 +79,6 @@ class GraphPage(tk.Frame): # Graphing class for plotting
 								   width=500, font=("Verdana", 12))
 		self.runTimer.pack(side='right')
 
-		# label to display data point info
-		self.pickMessage = tk.Message(display_frame, text="no data selected", width=500, font=("Verdana", 12))
-		self.pickMessage.pack(side='right')
-
 		# create the plot manager
 		self.plot_container = PlotManager(self)
 
