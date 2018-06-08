@@ -75,10 +75,6 @@ class GraphPage(tk.Frame): # Graphing class for plotting
 		myToolBar.update()
 		myCanvas._tkcanvas.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
 
-		self.runTimer = tk.Message(display_frame, text="TODO - Add the timing here in seconds",
-								   width=500, font=("Verdana", 12))
-		self.runTimer.pack(side='right')
-
 		# create the plot manager
 		self.plot_container = PlotManager(self)
 
