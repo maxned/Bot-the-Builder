@@ -6,4 +6,4 @@
 - Researched Q-Learning and TensorFlow
 
 # Thursday, June 08
-- Uploaded replays with Terran fighting for additional data
+- Uploaded non-tournament replays with Terran fighting for additional data
