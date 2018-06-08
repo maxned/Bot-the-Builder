@@ -1,3 +1,10 @@
+# Thursday June 7
+- ran 2350 episodes with some new things to help the algorithm converge but the Q learner did not end up learning how to make marines quickly and efficiently
+    - some things I tried were making the alpha (learning rate) and epsilon (random action chance) decrease over time so that the algorithm could randomly learn how to build marines and then converge to a steady state
+    - I also tried giving the algorithm a full reward when reaching 20 marines
+    - Finally, I fixed a learning bug where the previous action and state would carry over from the previous game
+- Even with all of these improvements, running the Q learner just based on the best action at each state, does not get past the first step of the game because the Q learner passed down the wrong action to the start of the game, meaning it did not converge properly but relied on random actions getting it out of bad states
+
 # Wednesday June 6
 - worked on improving the learning algorithm to learn better
     - ran the algorithm overnight for 1536 games but it was very slow and inefficient at building units
