@@ -1,7 +1,3 @@
-''' TODO LIST
-	Talk about how inputs will be read
-'''
-
 import tkinter as tk
 import numpy as np
 import os.path
@@ -26,10 +22,11 @@ graphFig = plt.Figure()
 refreshRate = 1000
 
 # TODO - List filenames here
-num_files = 3
-data_file1 = "test_data.txt" # sample test file
-timing_file = "timing_data.txt" # file that shows the amount of time elapsed for the a given replay
-name_file = "data_names.txt"
+num_files = 4
+data_file1 = "K_5.csv" 
+data_file2 = "K_10.csv" 
+data_file3 = "K_15.csv"
+data_file4 = "K_20.csv"
 
 class App(tk.Tk):	# Main Window container of our Application
 
@@ -48,10 +45,6 @@ class App(tk.Tk):	# Main Window container of our Application
 			self.winfo_reqwidth()) / 8		# appears on the screen
 		y = (self.winfo_screenwidth() -
 			self.winfo_reqwidth()) / 8
-
-		''' May be deprecated in python 3
-		self.geometry("+{xpos}+{ypos}".format(xpos=x, ypos=y))
-		'''
 
 		self.title("Bot-the-Builder Graphing Interface")
 
@@ -82,17 +75,9 @@ class GraphPage(tk.Frame): # Graphing class for plotting
 		myToolBar.update()
 		myCanvas._tkcanvas.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
 
-		self.newRun_button = tk.Button(button_frame, text="New Run",
-									command=self.start_run)
-		self.newRun_button.pack(side='left')
-
 		self.runTimer = tk.Message(display_frame, text="TODO - Add the timing here in seconds",
 								   width=500, font=("Verdana", 12))
 		self.runTimer.pack(side='right')
-
-		# label to display data point info
-		self.pickMessage = tk.Message(display_frame, text="no data selected", width=500, font=("Verdana", 12))
-		self.pickMessage.pack(side='right')
 
 		# create the plot manager
 		self.plot_container = PlotManager(self)
@@ -111,8 +96,9 @@ class GraphPage(tk.Frame): # Graphing class for plotting
 		  					command=lambda: controller.close_program())
 		self.quit_button.pack(side='left')
 
+		self.start_run()
+
 	def start_run(self):	# initialize the replay parser
-		self.newRun_button.pack_forget()
 		self.quit_button.pack_forget()
 		self.pause_button.pack(side='left')
 		self.resume_button.pack(side='left')
@@ -136,20 +122,10 @@ class PlotManager(object):	# contains logic for subplots
 		self.parent = parent	# reference to graphPage
 
 		# Plot definitions
-		self.plot_dynamic1 = graphFig.add_subplot(2, 2, 1) 		# create a 1x2 plot at subplot 1
-		self.plot_dynamic2 = graphFig.add_subplot(2, 2, 2)		# create a 1x2 plot at subplot 2
-		self.plot_static1  = graphFig.add_subplot(2, 2, 3)		# dynamic plots update as the files are changed
-		self.plot_static2  = graphFig.add_subplot(2, 2, 4)
-
-		''' TODO '''
-		# Arrays for graphable data
-		self.data_x = []
-		self.data_y = []
-
-		# Array for static plots
-		self.static_plots = []
-		self.static_plots.append(self.plot_static1)
-		self.static_plots.append(self.plot_static2)
+		self.plot1 = graphFig.add_subplot(2, 2, 1) 		# create a 1x2 plot at subplot 1
+		self.plot2 = graphFig.add_subplot(2, 2, 2)		# create a 1x2 plot at subplot 2
+		self.plot3 = graphFig.add_subplot(2, 2, 3)		# dynamic plots update as the files are changed
+		self.plot4 = graphFig.add_subplot(2, 2, 4)
 
 	def animate(self, i):	# animate graphs
 		filesExist = self.check_for_files()
@@ -159,13 +135,8 @@ class PlotManager(object):	# contains logic for subplots
 
 			self.handle_new_data()
 
-			self.update_dynamic_plots()
-			# self.update_runTimer(timing_file)
+			self.update_plots()
 
-			''' TODO '''
-			# get names of data-types
-			self.data_names = self.get_name_data("data_names.txt")
-			collect1 = graphFig.canvas.mpl_connect('pick_event', self.on_pick)	# allow points to be clicked on the graph
 		else:
 			self.parent.runTimer.configure(text="Missing Input files...")
 
@@ -174,65 +145,53 @@ class PlotManager(object):	# contains logic for subplots
 			self.handle_new_data()
 			time.sleep(1)	# sleep 1 second
 
-	def handle_new_data(self):	# check for new water levels and update the database
+	def handle_new_data(self):	# check for updates to plot_data
 		xData, yData = self.get_plot_data(data_file1)
 
 		self.data_x = list(xData)
 		self.data_y = list(yData)
 
-	''' TODO '''
-	def update_dynamic_plots(self): 	# update dynamic (animated) plots
+	def update_plots(self): 	# update dynamic (animated) plots
 		xData, yData = self.get_plot_data(data_file1)
 		if(xData and yData):
-			self.update_plot(self.plot_dynamic1, xData, yData,
-				xlabel='x-data',
-				ylabel='y-data',
-				title ='Dyamic Plot 1',
-				settings='bo')	# bo = blue, circles (scatter-points)
+			self.update_plot(self.plot1, xData, yData,
+				xlabel='time (seconds)',
+				ylabel='probability of win (%)',
+				title ='Probability of Winning vs. Time for K = 5',
+				settings='b-D')	# bo = blue, circles (scatter-points)
 
 		# xData, yData = retrieve dynamic plot 2 data
-		xData, yData = self.get_plot_data(data_file1)
+		xData, yData = self.get_plot_data(data_file2)
 		if(xData and yData):
-			self.update_plot(self.plot_dynamic2, xData, yData,
-								xlabel='x-data',
-							 	ylabel='y-data',
-							 	title ='Dynamic plot 2',
+			self.update_plot(self.plot2, xData, yData,
+								xlabel='time (seconds)',
+							 	ylabel='probability of win (%)',
+							 	title ='Probability of Winning vs. Time for K = 10',
 			 					settings='r-D')	# r-D = red, diamonds with a line through points '''
+		
+		xData, yData = self.get_plot_data(data_file3)
+		if(xData and yData):
+			self.update_plot(self.plot3, xData, yData,
+								xlabel='time (seconds)',
+							 	ylabel='probability of win (%)',
+							 	title ='Probability of Winning vs. Time for K = 15',
+			 					settings='g-D')	# r-D = red, diamonds with a line through points '''
 
-	''' TODO '''
-	def get_name_data(self, fileName):
-		pullData = open(fileName, "r").read()
-		dataList = pullData.split('\n')
-		nameList = []
+		xData, yData = self.get_plot_data(data_file4)
+		if(xData and yData):
+			self.update_plot(self.plot4, xData, yData,
+								xlabel='time (seconds)',
+							 	ylabel='probability of win (%)',
+							 	title ='Probability of Winning vs. Time for K = 20',
+			 					settings='y-D')	# r-D = red, diamonds with a line through points '''
 
-		for eachLine in dataList:
-			if len(eachLine) > 1:
-				nameList.append(str(eachLine))
-
-		return nameList
-
-	def update_static_plot(self, plotNumber, xData, yData): # update static plot
-		selected_plot = self.static_plots[int(plotNumber) - 1]
-
-		''' TODO - Adjust x and y-labels to fit the data '''
-		self.update_plot(selected_plot, xData, yData,
-						 xlabel='X-Data ',
-						 ylabel='Y-Data',
-						 title='Title Here',
-						 settings='go')
-
-		diag_line = selected_plot.plot(	selected_plot.get_xlim(), 	# add a 45 degree line to the plot
-									    selected_plot.get_ylim(),
-									    ls="--",
-									    c="0.1")
-
-	''' TODO - ADD more counters for files '''
 	def check_for_files(self):	# check that all input files exist
 		fileCounter = 0
 		fileCounter += self.check_fileExists(data_file1)
-		fileCounter += self.check_fileExists(timing_file)
-		fileCounter += self.check_fileExists(name_file)
-
+		fileCounter += self.check_fileExists(data_file2)
+		fileCounter += self.check_fileExists(data_file3)
+		fileCounter += self.check_fileExists(data_file4)
+		
 		if(fileCounter == num_files):
 			return 1
 		else:
@@ -253,8 +212,9 @@ class PlotManager(object):	# contains logic for subplots
 		for eachLine in dataList:	# parse through the the read lines
 			if len(eachLine) > 1: # skip empty lines (if they exist)
 				x, y = eachLine.split(',')
-				xList.append(float(x))
-				yList.append(float(y))
+				if(x.isnumeric()):
+					xList.append(float(x))
+					yList.append(float(y))
 
 		return xList, yList
 
@@ -270,22 +230,6 @@ class PlotManager(object):	# contains logic for subplots
 		self.plot_dynamic2.clear()
 		self.plot_static1.clear()
 		self.plot_static2.clear()
-
-	''' TODO '''
-	def update_runTimer(self, fileName):
-		if(os.stat(fileName).st_size != 0): # check that the file is not blank
-			x_data, y_Data = self.get_plot_data(fileName)
-			current_x = str(xData[0])
-			current_y = str(yData[0])
-			self.parent.runTimer.configure(text='Current X: %s, Current Y: %s ' % (current_x, current_y))
-
-	def on_pick(self, event):	# handle clicks to the graph
-		index = event.ind[0]	# get the index of the mouse click
-		# use the index into a name array to get the name of a dataset
-		# current_name = some_name_array[index]
-		# current_x = some_x_array[index]
-		# current_y = some_y_array[index]
-		# self.parent.pickMessage.configure(text='Data-point name: %s, x: %s, y: %s' % (current_name, current_x, current_y))
 
 root = App()
 root.geometry("1280x720")
