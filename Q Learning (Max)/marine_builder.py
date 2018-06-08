@@ -24,7 +24,7 @@ from pysc2.agents import base_agent
 from pysc2.lib import actions
 from pysc2.lib import features
 
-RUN_TRAINED = True
+RUN_TRAINED = False
 
 MARINE_GOAL = 20
 MAX_SUPPLY_DEPOTS = 3

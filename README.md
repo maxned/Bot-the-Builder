@@ -14,16 +14,6 @@ Replay Parser
 * It dumps the data of the 91 lables by time step into a csv file `"Units-1311.csv"`
 * It is also used to parse through the replay which we want to make predictions into another csv file `"parsed_replay.csv"`
 
-
-Q-Learning
----
-* We need a Q-table to store the possible actions the bot will take
-* Possible actions: `build_barracks()`, `build_workers()`
-* Randomly select which action to take at each step 
-* We plan on using **Q-learning** to teach the bot how to reach this goal.
-* We run multiple iterations of the game in order to **train** the bot on the best sequence to reach this goal.
-* We then **test** the bot by having it run through until it reaches its goal.
-
 K-Nearest Neighbor
 ---
 * We parse over 1k replays saving at every predetermined time interval  
@@ -40,6 +30,10 @@ Graphing GUI
 * x-axis: the time step of the replay
 * y-axis: the probability of the win given a particular *k* value 
 
+Q-Learning
+---
+* Try to build 20 marines as fast and as efficiently as possible using Q learning.
+* For more information, visit the README in the Q Learning folder.
 
 ~~Weka~~
 ---
