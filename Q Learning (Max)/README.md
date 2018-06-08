@@ -72,7 +72,7 @@ The learning with 1536 episodes happened before the 2350 episodes and it leads t
 
 The improvements after the 1536 episodes seem to have made things worse for the Q learner.
 
-#### Things Tried to help it converge
+#### Things tried to help the algorithm converge
 - supplying a goal of 20 marines and moving to the next episode when reaching it
 - supplying maximum limits of Supply Depots and Barracks and giving negative reward when going over the limit
     - also tried not allowing the bot to build past the limit in the 1536 episodes folder
