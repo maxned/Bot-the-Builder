@@ -1,5 +1,5 @@
 # Bot-the-Builder
-We plan to build a fault recovery **Bot**! *beep beep*
+Implement a bot which will "*learn*" how to build a predetermined amount of marines. Along with a q-learning bot we  provide feedback on a replay in terms of probability of winning per time step.
 
 **Changelog**
 -----
