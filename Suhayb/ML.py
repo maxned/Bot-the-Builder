@@ -1,4 +1,4 @@
-# based off of https://github.com/tensorflow/models/blob/master/official/wide_deep/wide_deep.py
+# Inspired by https://github.com/tensorflow/models/blob/master/official/wide_deep/wide_deep.py
 
 from __future__ import absolute_import
 from __future__ import division
