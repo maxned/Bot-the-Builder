@@ -5,5 +5,5 @@
 # Thurdsday, May 17
 - Researched Q-Learning and TensorFlow
 
-# Thursday, June 08
+# Thursday, June 07
 - Uploaded non-tournament replays with Terran fighting for additional data
