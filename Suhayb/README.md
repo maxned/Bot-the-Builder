@@ -34,7 +34,7 @@ Running
 ___
 
 # Linear Regression using TensorFlow `ML.py`
-In order to experiment with the parsed data, we ran a linear regression over the data which resulted in a *60% accuracy* when predicting whether a state would result in a win or a loss. **Linear regression was not used** due to its low accuracy rate when compared to K-nearest neighbors approach.
+In order to experiment with the parsed data, we ran a linear regression over the data which resulted in a *60% accuracy* when predicting whether a state would result in a win or a loss. **From our experience Linear regression is not recommended** due to its low accuracy rate when compared to K-nearest neighbors approach.
 
 Running
 ---
