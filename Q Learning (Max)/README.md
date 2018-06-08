@@ -6,7 +6,7 @@ The bot is written using Python 3 and was not tested on Python 2.
 
 #### Requirements:
 
-- install Starcraft on any system
+- install Starcraft II on any system (preferably linux for training and Mac OS for visualization)
 
     - I tried using a `t2.micro` AWS EC2 Ubuntu instance to run Starcraft in headless mode but found it to be too slow with about 2 minutes per game. I then started up another `t2.2xlarge` instance that was able to run each game in about 30 seconds.
 
