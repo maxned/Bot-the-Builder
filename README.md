@@ -4,7 +4,7 @@ We plan to build a fault recovery **Bot**! *beep beep*
 **Changelog**
 -----
 1. We are now focusing on  having the bot accomplish a goal such as build 20 marines by a certain unit of time.
-2. We will be brsanching off into Q-learning ~~and the use of [Weka]~~ to determine the outcomes that a player should take.
+2. We will be branching off into Q-learning ~~and the use of [Weka]~~ to determine the outcomes that a player should take.
 3. We have decided to implement K-Nearest Neighbor (KNN) in order to deterimne the probability 
 of a player winning at any given time. 
 
