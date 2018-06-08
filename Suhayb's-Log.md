@@ -41,3 +41,7 @@ Researched game dependency trees and concluded that it’s better to use the API
 - Ran a linear regression over the data using TensorFlow.
 - Concluded that linear regression has a low accuracy rate of 61% which is close to random of 50% accuracy.
 
+# Mon June 4th
+- Final team meeting
+- Worked with Josue on using the parsed data and KNN to predict wins. 
+

@@ -11,11 +11,6 @@
 
 # Input: paths to star craft 2 replay files
 # Output file Structure:
-#  wins
-#    stats
-#      replay.csv
-#      ...
-#  losses
 #    stats
 #      replay.csv
 #      ...
@@ -34,6 +29,30 @@ pbar = trange(
     desc='Processing',
     bar_format=' {desc}: {bar}  {percentage:3.0f}% ')
 
+statsHead = [
+    'winner', 'seconds', 'minerals_current', 'vespene_current',
+    'minerals_collection_rate', 'vespene_collection_rate',
+    'workers_active_count', 'minerals_used_in_progress_army',
+    'minerals_used_in_progress_economy',
+    'minerals_used_in_progress_technology',
+    'vespene_used_in_progress_army', 'vespene_used_in_progress_economy',
+    'vespene_used_in_progress_technology', 'minerals_used_current_army',
+    'minerals_used_current_economy', 'minerals_used_current_technology',
+    'vespene_used_current_army', 'vespene_used_current_economy',
+    'vespene_used_current_technology', 'minerals_lost_army',
+    'minerals_lost_economy', 'minerals_lost_technology',
+    'vespene_lost_army', 'vespene_lost_economy', 'vespene_lost_technology',
+    'minerals_killed_army', 'minerals_killed_economy',
+    'minerals_killed_technology', 'vespene_killed_army',
+    'vespene_killed_economy', 'vespene_killed_technology', 'food_used',
+    'food_made', 'minerals_used_active_forces',
+    'vespene_used_active_forces', 'ff_minerals_lost_army',
+    'ff_minerals_lost_economy', 'ff_minerals_lost_technology',
+    'ff_vespene_lost_army', 'ff_vespene_lost_economy',
+    'ff_vespene_lost_technology'
+]
+
+
 #parser
 for num, parseFile in enumerate(files, start=1):
     replay = sc2reader.load_replay(parseFile, load_map=1)
@@ -48,36 +67,10 @@ for num, parseFile in enumerate(files, start=1):
 
     #create output files
     fileName = os.path.splitext(os.path.basename(parseFile))[0]
-
-    # TODO: Check if file already exsists if so skip
     statsFile = open(
         'output/stats/' + fileName + '.csv', 'w', newline='')
     statsCSV = csv.writer(statsFile)
     
-    # TODO: Remove irrelevant info
-    statsHead = [
-        'winner', 'seconds', 'minerals_current', 'vespene_current',
-        'minerals_collection_rate', 'vespene_collection_rate',
-        'workers_active_count', 'minerals_used_in_progress_army',
-        'minerals_used_in_progress_economy',
-        'minerals_used_in_progress_technology',
-        'vespene_used_in_progress_army', 'vespene_used_in_progress_economy',
-        'vespene_used_in_progress_technology', 'minerals_used_current_army',
-        'minerals_used_current_economy', 'minerals_used_current_technology',
-        'vespene_used_current_army', 'vespene_used_current_economy',
-        'vespene_used_current_technology', 'minerals_lost_army',
-        'minerals_lost_economy', 'minerals_lost_technology',
-        'vespene_lost_army', 'vespene_lost_economy', 'vespene_lost_technology',
-        'minerals_killed_army', 'minerals_killed_economy',
-        'minerals_killed_technology', 'vespene_killed_army',
-        'vespene_killed_economy', 'vespene_killed_technology', 'food_used',
-        'food_made', 'minerals_used_active_forces',
-        'vespene_used_active_forces', 'ff_minerals_lost_army',
-        'ff_minerals_lost_economy', 'ff_minerals_lost_technology',
-        'ff_vespene_lost_army', 'ff_vespene_lost_economy',
-        'ff_vespene_lost_technology'
-    ]
-
     statsCSV.writerow(statsHead)
     # Parse
     for event in replay.tracker_events:
